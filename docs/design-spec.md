@@ -209,7 +209,7 @@ HelpMate
 
 > 设计稿地址（设置为「任何人可查看」）：
 >
-> **[待补充 Figma 链接]**
+> **[HelpMate UI Design](https://www.figma.com/design/dxKa3GWXKRiBquoFIdwZpl/HelpMate-UI-Design?node-id=0-1&t=782aFOJOayYth2nb-1)**
 
 ---
 
