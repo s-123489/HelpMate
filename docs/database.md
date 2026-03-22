@@ -20,15 +20,11 @@
 
 erDiagram
 
-&#x20;   USER ||--o{ TASK : "发布"
-
-&#x20;   USER ||--o{ ORDER\_INFO : "接单"
-
-&#x20;   TASK ||--o| ORDER\_INFO : "对应"
-
-&#x20;   USER ||--o{ WALLET\_TRANSACTION : "拥有"
-
-&#x20;   ORDER\_INFO ||--o{ WALLET\_TRANSACTION : "关联"
+USER ||--o{ TASK : "publish"
+USER ||--o{ ORDER_INFO : "accept"
+TASK ||--o| ORDER_INFO : "match"
+USER ||--o{ WALLET_TRANSACTION : "own"
+ORDER_INFO ||--o{ WALLET_TRANSACTION : "relate"
 
 
 

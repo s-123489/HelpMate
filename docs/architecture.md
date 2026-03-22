@@ -26,16 +26,11 @@
 
 graph TB
 
-&#x20;   A\[用户端 小程序/App] -->|HTTP/WebSocket| B\[Spring Boot 后端]
-
-&#x20;   B --> C\[MySQL 数据库]
-
-&#x20;   B --> D\[第三方支付 API]
-
-&#x20;   B --> E\[地图 API]
-
-&#x20;   B --> F\[消息推送服务]
-
+A[Client App] -->|HTTP/WebSocket| B[Spring Boot Backend]
+B --> C[MySQL Database]
+B --> D[Payment API]
+B --> E[Map API]
+B --> F[Push Service]
 ```
 
 
