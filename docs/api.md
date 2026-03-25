@@ -1,144 +1,170 @@
-API设计文档（初步）
+\# API 使用说明
 
 
 
-模块功能
+\## 基本信息
 
-HelpMate 是一个校园跑腿/互助平台，核心功能包括：发布任务、接单、实时位置、评价系统、钱包支付
+\- Base URL：`http://localhost:8080`
 
+\- 数据格式：JSON
 
+\- 认证方式：Bearer Token（JWT）
 
-技术选型：
 
-框架：Spring Boot
 
-接口风格：RESTful
+\## 统一响应格式
 
-实时通信：WebSocket
+所有接口返回统一格式：
 
-数据格式：JSON
+```json
 
-第三方支付：微信支付 / 支付宝 API
+{
 
+&#x20; "code": 200,
 
+&#x20; "message": "success",
 
-主要接口设计
+&#x20; "data": {}
 
+}
 
+```
 
-1\.任务接口
 
-| 方法 | 路径 | 说明 |
 
-|------|------|------|
+\## 认证说明
 
-| POST | /api/tasks | 发布任务 |
+登录后获取 token，后续需要认证的接口在请求头加：
 
-| GET | /api/tasks | 获取任务列表 |
+```
 
-| GET | /api/tasks/{id} | 获取任务详情 |
+Authorization: Bearer <token>
 
-| PUT | /api/tasks/{id}/accept | 接单 |
+```
 
-| PUT | /api/tasks/{id}/complete | 完成任务 |
 
 
+\## 接口列表
 
-2\.用户接口
 
-| 方法 | 路径 | 说明 |
 
-|------|------|------|
+\### 用户认证
 
-| POST | /api/users/register | 注册 |
 
-| POST | /api/users/login | 登录 |
 
-| GET | /api/users/{id} | 获取用户信息 |
+\#### 注册
 
+\- 方法：POST
 
+\- 路径：`/api/user/register`
 
-3\.评价接口
+\- 请求体：
 
-| 方法 | 路径 | 说明 |
+```json
 
-|------|------|------|
+{
 
-| POST | /api/reviews | 提交评价 |
+&#x20; "username": "lilili",
 
-| GET | /api/reviews/{userId} | 获取用户评价 |
+&#x20; "password": "123456",
 
+&#x20; "email": "lilili@example.com",
 
+&#x20; "phone": "13800138000"
 
-4\.钱包接口
+}
 
-| 方法 | 路径 | 说明 |
+```
 
-|------|------|------|
 
-| GET | /api/wallet/balance | 查询余额 |
 
-| POST | /api/wallet/pay | 发起支付 |
+\#### 登录
 
-| GET | /api/wallet/records | 交易记录 |
+\- 方法：POST
 
+\- 路径：`/api/user/login`
 
+\- 请求体：
 
-WebSocket
+```json
 
-连接地址：ws://服务器地址/ws/location/{taskId}
+{
 
-用途：跑腿员实时位置推送
+&#x20; "username": "lilili",
 
+&#x20; "password": "123456"
 
+}
 
-项目目录结构（初步）
+```
 
-HelpMate/
+\- 返回：token、userId、username
 
-├── README.md
 
-├── .gitignore
 
-├── docs/
+\### 任务管理
 
-│   ├── frontend.md        # 前端说明
 
-│   ├── backend.md         # 后端说明
 
-│   └── api.md             # API 设计（本文档）
+\#### 发布任务（需登录）
 
-├── frontend/              # 前端代码（小程序 / React Native）
+\- 方法：POST
 
-│   ├── pages/             # 页面
+\- 路径：`/api/task/create`
 
-│   ├── components/        # 组件
+\- 请求体：
 
-│   └── utils/             # 工具函数
+```json
 
-└── backend/               # 后端代码（Spring Boot）
+{
 
-&nbsp;   ├── src/
+&#x20; "title": "帮我取快递",
 
-&nbsp;   │   └── main/
+&#x20; "description": "快递柜B区，取件码1234",
 
-&nbsp;   │       └── java/
+&#x20; "category": "EXPRESS",
 
-&nbsp;   │           └── com/helpmate/
+&#x20; "reward": 5.00,
 
-&nbsp;   │               ├── controller/    # 接口层
+&#x20; "location": "宿舍楼A栋",
 
-&nbsp;   │               ├── service/       # 业务逻辑层
+&#x20; "deadline": "2026-03-25 18:00"
 
-&nbsp;   │               ├── repository/    # 数据访问层
+}
 
-&nbsp;   │               └── model/         # 数据模型
+```
 
-&nbsp;   └── pom.xml
 
 
+\#### 获取任务列表
 
-运行方式
+\- 方法：GET
 
-mvn spring-boot:run
+\- 路径：`/api/task/list`
+
+\- 参数：
+
+&#x20; - page（默认1）
+
+&#x20; - size（默认10）
+
+&#x20; - category（可选，EXPRESS/FOOD/PURCHASE/OTHER）
+
+
+
+\## 状态码说明
+
+| 状态码 | 说明 |
+
+|--------|------|
+
+| 200 | 成功 |
+
+| 400 | 参数错误 |
+
+| 401 | 未登录或token失效 |
+
+| 404 | 资源不存在 |
+
+| 500 | 服务器错误 |
 
