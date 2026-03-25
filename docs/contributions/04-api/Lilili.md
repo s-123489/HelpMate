@@ -40,7 +40,7 @@
 
 \## PR 链接
 
-\- PR #5: https://github.com/s-123489/HelpMate/pull/5
+\- PR #6: [https://github.com/s-123489/HelpMate/pull/5](https://github.com/s-123489/HelpMate/pull/6)
 
 
 
