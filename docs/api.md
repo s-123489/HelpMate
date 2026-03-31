@@ -12,14 +12,15 @@
 
 #### 注册
 
-- **POST** `/user/register`
+- **POST** `/api/user/register`
 - 请求体：
 
 ```json
 {
   "username": "string",
   "password": "string",
-  "email": "string"
+  "email": "string",
+  "phone": "string"
 }
 ```
 
@@ -35,7 +36,7 @@
 
 #### 登录
 
-- **POST** `/user/login`
+- **POST** `/api/user/login`
 - 请求体：
 
 ```json
@@ -52,24 +53,28 @@
   "code": 200,
   "message": "登录成功",
   "data": {
-    "token": "string"
+    "token": "string",
+    "username": "string"
   }
 }
 ```
 
-### 帮助请求模块
+### 任务模块
 
-#### 发布请求
+#### 发布任务
 
-- **POST** `/help/create`
-- 请求头：需携带 Token
+- **POST** `/api/task/create`
+- 请求头：`Authorization: Bearer <token>`（必须登录）
 - 请求体：
 
 ```json
 {
   "title": "string",
   "description": "string",
-  "category": "string"
+  "category": "EXPRESS | FOOD | PURCHASE | OTHER",
+  "reward": 10.00,
+  "location": "string",
+  "deadline": "string"
 }
 ```
 
@@ -79,14 +84,24 @@
 {
   "code": 200,
   "message": "发布成功",
-  "data": { "id": 1 }
+  "data": 1
 }
 ```
 
-#### 查询请求列表
+> `data` 为新建任务的 ID
 
-- **GET** `/help/list?page=1&size=10`
-- 请求头：需携带 Token
+#### 查询任务列表
+
+- **GET** `/api/task/list?page=1&size=10&category=EXPRESS`
+- 请求头：无需登录
+- 参数说明：
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| page | int | 否 | 页码，默认 1 |
+| size | int | 否 | 每页条数，默认 10 |
+| category | string | 否 | 分类筛选，不传则返回全部 |
+
 - 返回：
 
 ```json
@@ -95,13 +110,18 @@
   "message": "success",
   "data": {
     "total": 100,
-    "list": [
+    "size": 10,
+    "current": 1,
+    "records": [
       {
         "id": 1,
         "title": "string",
         "description": "string",
         "category": "string",
-        "createdAt": "2024-01-01 12:00:00"
+        "reward": 10.00,
+        "status": 0,
+        "location": "string",
+        "createdAt": "2026-03-31T12:00:00"
       }
     ]
   }
@@ -114,5 +134,5 @@
 |------|------|
 | 200 | 成功 |
 | 400 | 参数错误 |
-| 401 | 未授权 |
+| 401 | 未授权（Token 缺失或过期） |
 | 500 | 服务器内部错误 |
