@@ -12,9 +12,6 @@
 ### 1. 页面设计（协助）
 
 - [x] 登录页设计（login）
-- [ ] 注册页设计（register）
-- [ ] 首页设计（home）
-- [ ] 首页信息架构梳理
 - [ ] 任务详情页字段确认
 - [ ] 发布任务页设计（create）
 - [ ] 订单状态流程图梳理
@@ -24,7 +21,7 @@
 
 - [ ] 信息架构图绘制
 - [ ] 订单状态标签颜色语义制定
-- [ ] 配色方案制定
+- [x] 配色方案制定
 - [ ] 字体与间距规范
 
 ### 3. 文档编写
@@ -45,6 +42,7 @@
 ## Figma 链接
 
 https://www.figma.com/design/dxKa3GWXKRiBquoFIdwZpl/HelpMate-UI-Design?node-id=0-1&t=782aFOJOayYth2nb-1
+https://www.figma.com/design/vQljiMMNtFoVaTcWdP6g97/Helpmate-ui-design-2?node-id=0-1&t=CJMKPjgoQSb9uAtl-1
 
 ## 遇到的问题和解决
 
@@ -61,5 +59,3 @@ https://www.figma.com/design/dxKa3GWXKRiBquoFIdwZpl/HelpMate-UI-Design?node-id=0
 直接决定了前端每个状态下可操作的按钮，两端协同设计更利于减少后续联调成本。
 
 ---
-
-> Git 提交记录截图、Figma 版本历史截图等证据材料提交到学习通，不需放入仓库
