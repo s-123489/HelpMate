@@ -7,6 +7,7 @@ import OrderMessage from './pages/Order/OrderMessage.jsx'
 import UserCenter from './pages/User/UserCenter.jsx'
 import Login from './pages/Auth/Login.jsx'
 import Register from './pages/Auth/Register.jsx'
+import AIChat from './pages/AIChat/AIChat.jsx'
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/task/publish" element={<TaskPublish />} />
         <Route path="/order/message" element={<OrderMessage />} />
         <Route path="/user/center" element={<UserCenter />} />
+        <Route path="/ai/chat" element={<AIChat />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>

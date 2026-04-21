@@ -98,6 +98,9 @@ const Home = () => {
           <h1 className="app-title">HelpMate</h1>
         </div>
         <div className="header-right">
+          <button className="header-btn" onClick={() => navigate('/ai/chat')}>
+            🤖 客服
+          </button>
           <button className="header-btn" onClick={handleViewOrders}>
             📋 订单
           </button>

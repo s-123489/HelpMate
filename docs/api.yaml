@@ -1,0 +1,614 @@
+openapi: 3.0.0
+info:
+  title: HelpMate API
+  version: 1.0.0
+  description: HelpMate 校园跑腿平台 API 文档
+
+paths:
+  /api/users/register:
+    post:
+      summary: 用户注册
+      tags:
+        - 用户认证
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+      responses:
+        '201':
+          description: 注册成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: 请求参数错误
+        '409':
+          description: 用户名已存在
+
+  /api/users/login:
+    post:
+      summary: 用户登录
+      tags:
+        - 用户认证
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: 用户名或密码错误
+
+  /api/users/logout:
+    post:
+      summary: 用户登出
+      tags:
+        - 用户认证
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 登出成功
+
+  /api/users/me:
+    get:
+      summary: 获取当前用户信息
+      tags:
+        - 用户认证
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+
+  /api/tasks:
+    get:
+      summary: 获取任务列表
+      tags:
+        - 任务管理
+      parameters:
+        - name: category
+          in: query
+          description: 任务分类
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: 每页数量
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskListResponse'
+
+    post:
+      summary: 发布任务
+      tags:
+        - 任务管理
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '201':
+          description: 发布成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+  /api/tasks/{id}:
+    get:
+      summary: 获取任务详情
+      tags:
+        - 任务管理
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 任务ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDetailResponse'
+
+  /api/tasks/{id}/accept:
+    put:
+      summary: 接取任务
+      tags:
+        - 任务管理
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 任务ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 接取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+  /api/tasks/{id}/complete:
+    put:
+      summary: 完成任务
+      tags:
+        - 任务管理
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 任务ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 完成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+  /api/tasks/published:
+    get:
+      summary: 获取我发布的任务
+      tags:
+        - 任务管理
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: 每页数量
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskListResponse'
+
+  /api/tasks/accepted:
+    get:
+      summary: 获取我接取的任务
+      tags:
+        - 任务管理
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: 每页数量
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskListResponse'
+
+  /api/orders:
+    get:
+      summary: 获取订单列表
+      tags:
+        - 订单管理
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          description: 订单状态
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: 每页数量
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponse'
+
+  /api/orders/{id}:
+    get:
+      summary: 获取订单详情
+      tags:
+        - 订单管理
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 订单ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetailResponse'
+
+  /api/messages:
+    get:
+      summary: 获取消息列表
+      tags:
+        - 消息管理
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          description: 消息类型
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: 每页数量
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageListResponse'
+
+  /api/messages/{id}/read:
+    put:
+      summary: 标记消息已读
+      tags:
+        - 消息管理
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 消息ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 标记成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+components:
+  schemas:
+    UserRegister:
+      type: object
+      required:
+        - username
+        - password
+        - name
+        - phone
+      properties:
+        username: 
+          type: string
+          description: 用户名
+        password: 
+          type: string
+          description: 密码
+        name: 
+          type: string
+          description: 真实姓名
+        phone: 
+          type: string
+          description: 手机号
+
+    UserLogin:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username: 
+          type: string
+          description: 用户名
+        password: 
+          type: string
+          description: 密码
+
+    UserResponse:
+      type: object
+      properties:
+        id: 
+          type: integer
+        username: 
+          type: string
+        name: 
+          type: string
+        phone: 
+          type: string
+        rating: 
+          type: number
+        avatar: 
+          type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        token: 
+          type: string
+        user: 
+          $ref: '#/components/schemas/UserResponse'
+
+    TaskCreate:
+      type: object
+      required:
+        - title
+        - description
+        - category
+        - pickupLocation
+        - deliveryLocation
+        - reward
+        - deadline
+      properties:
+        title: 
+          type: string
+          description: 任务标题
+        description: 
+          type: string
+          description: 任务描述
+        category: 
+          type: string
+          description: 任务分类
+        pickupLocation: 
+          type: string
+          description: 取件地点
+        pickupDetails: 
+          type: string
+          description: 取件详情
+        deliveryLocation: 
+          type: string
+          description: 送达地点
+        deliveryDetails: 
+          type: string
+          description: 送达详情
+        reward: 
+          type: number
+          description: 赏金
+        deadline: 
+          type: string
+          format: date-time
+          description: 截止时间
+        images: 
+          type: array
+          items:
+            type: string
+          description: 图片URL
+
+    TaskResponse:
+      type: object
+      properties:
+        id: 
+          type: integer
+        title: 
+          type: string
+        category: 
+          type: string
+        reward: 
+          type: number
+        status: 
+          type: string
+        publishTime: 
+          type: string
+        deadline: 
+          type: string
+
+    TaskDetailResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/TaskResponse'
+        - properties:
+            description: 
+              type: string
+            pickupLocation: 
+              type: string
+            pickupDetails: 
+              type: string
+            deliveryLocation: 
+              type: string
+            deliveryDetails: 
+              type: string
+            publisher: 
+              $ref: '#/components/schemas/UserResponse'
+            images: 
+              type: array
+              items:
+                type: string
+
+    TaskListResponse:
+      type: object
+      properties:
+        total: 
+          type: integer
+        page: 
+          type: integer
+        limit: 
+          type: integer
+        data: 
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskResponse'
+
+    OrderResponse:
+      type: object
+      properties:
+        id: 
+          type: integer
+        orderNumber: 
+          type: string
+        taskId: 
+          type: integer
+        taskTitle: 
+          type: string
+        status: 
+          type: string
+        progress: 
+          type: integer
+        reward: 
+          type: number
+        publisherId: 
+          type: integer
+        accepterId: 
+          type: integer
+        createTime: 
+          type: string
+
+    OrderDetailResponse:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/OrderResponse'
+        - properties:
+            publisher: 
+              $ref: '#/components/schemas/UserResponse'
+            accepter: 
+              $ref: '#/components/schemas/UserResponse'
+            steps: 
+              type: array
+              items:
+                $ref: '#/components/schemas/OrderStep'
+
+    OrderStep:
+      type: object
+      properties:
+        name: 
+          type: string
+        time: 
+          type: string
+        completed: 
+          type: boolean
+
+    OrderListResponse:
+      type: object
+      properties:
+        total: 
+          type: integer
+        page: 
+          type: integer
+        limit: 
+          type: integer
+        data: 
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderResponse'
+
+    MessageResponse:
+      type: object
+      properties:
+        id: 
+          type: integer
+        type: 
+          type: string
+        title: 
+          type: string
+        content: 
+          type: string
+        time: 
+          type: string
+        read: 
+          type: boolean
+
+    MessageListResponse:
+      type: object
+      properties:
+        total: 
+          type: integer
+        page: 
+          type: integer
+        limit: 
+          type: integer
+        data: 
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageResponse'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
