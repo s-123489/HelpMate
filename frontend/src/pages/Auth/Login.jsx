@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Login.css';
+import { mockApi } from '../../services/mockApi';
+import { setToken, setUser } from '../../utils/auth';
 
 const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    username: '',
+    studentId: '',
     password: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -15,14 +19,27 @@ const Login = () => {
       ...prev,
       [name]: value
     }));
+    setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // 模拟登录成功
-    localStorage.setItem('token', 'mock-token');
-    localStorage.setItem('user', JSON.stringify({ id: 1, username: formData.username, name: '测试用户' }));
-    navigate('/');
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await mockApi.login(formData.studentId, formData.password);
+
+      if (response.success) {
+        setToken(response.data.token);
+        setUser(response.data.user);
+        navigate('/');
+      }
+    } catch (err) {
+      setError(err.message || '登录失败，请重试');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRegister = () => {
@@ -38,13 +55,15 @@ const Login = () => {
         </div>
 
         <form className="login-form" onSubmit={handleSubmit}>
+          {error && <div className="error-message">{error}</div>}
+
           <div className="form-group">
             <input
               type="text"
-              name="username"
+              name="studentId"
               className="form-input"
-              placeholder="用户名："
-              value={formData.username}
+              placeholder="学号："
+              value={formData.studentId}
               onChange={handleInputChange}
               required
             />
@@ -62,9 +81,14 @@ const Login = () => {
             />
           </div>
 
-          <button type="submit" className="submit-btn">
-            登入
+          <button type="submit" className="submit-btn" disabled={loading}>
+            {loading ? '登录中...' : '登入'}
           </button>
+
+          <div className="demo-hint">
+            <p>测试账号：2021001 密码：123456</p>
+            <p>测试账号：2021002 密码：123456</p>
+          </div>
         </form>
 
         <div className="register-link">

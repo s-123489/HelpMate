@@ -1,45 +1,72 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import './TaskDetail.css';
+import { mockApi } from '../../services/mockApi';
+import { getUser } from '../../utils/auth';
 
 const TaskDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [task, setTask] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const currentUser = getUser();
 
   useEffect(() => {
-    // 模拟获取任务详情
-    setTimeout(() => {
-      setTask({
-        id: id || 1,
-        title: '帮我取快递',
-        category: '快递代取',
-        reward: 5,
-        description: '帮我去菜鸟驿站取一个快递，取件码：1234。快递是一个小包裹，不是很重。',
-        pickupLocation: '南门菜鸟驿站',
-        deliveryLocation: '东区宿舍楼 3-201',
-        status: '待接取',
-        publishTime: '2026.4.12',
-        deadline: '2026.4.15',
-        publisher: {
-          id: 1,
-          name: '张三',
-          avatar: 'https://via.placeholder.com/50',
-          rating: 4.8,
-          completedTasks: 23
-        }
-      });
-      setLoading(false);
-    }, 500);
+    loadTaskDetail();
   }, [id]);
 
-  const handleAcceptTask = () => {
-    alert('接单成功！');
+  const loadTaskDetail = async () => {
+    try {
+      setLoading(true);
+      const response = await mockApi.getTaskDetail(id);
+      if (response.success) {
+        setTask(response.data);
+      }
+    } catch (err) {
+      setError(err.message || '加载失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAcceptTask = async () => {
+    if (!currentUser) {
+      alert('请先登录');
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const response = await mockApi.acceptTask(task.id, currentUser.id);
+      if (response.success) {
+        alert('接单成功！');
+        loadTaskDetail(); // 重新加载任务详情
+      }
+    } catch (err) {
+      alert(err.message || '接单失败');
+    }
+  };
+
+  const handleCompleteTask = async () => {
+    try {
+      const response = await mockApi.completeTask(task.id);
+      if (response.success) {
+        alert('任务已完成！');
+        loadTaskDetail();
+      }
+    } catch (err) {
+      alert(err.message || '操作失败');
+    }
   };
 
   const handleContact = () => {
-    alert('联系功能开发中');
+    const contactPerson = task.status === 'pending' ? task.publisher : task.accepter;
+    if (contactPerson && contactPerson.phone) {
+      alert(`联系电话：${contactPerson.phone}`);
+    } else {
+      alert('联系方式不可用');
+    }
   };
 
   if (loading) {
