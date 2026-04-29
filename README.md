@@ -3,6 +3,9 @@
 > 业务逻辑完整，贴近校园生活。技术栈：React Native / 小程序 + Spring Boot。
 > 创新点：实时位置 + 订单状态机 + 钱包支付的组合。
 
+[![CI](https://github.com/s-123489/HelpMate/actions/workflows/ci.yml/badge.svg)](https://github.com/s-123489/HelpMate/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/s-123489/HelpMate/branch/main/graph/badge.svg)](https://codecov.io/gh/s-123489/HelpMate)
+
 ## 项目简介
 
 HelpMate 是一款面向在校学生的跑腿与互助平台，支持发布取快递、送餐、代购、互助等任务，
