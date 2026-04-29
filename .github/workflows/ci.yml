@@ -29,14 +29,9 @@ jobs:
           # 不启动完整 Spring 上下文，无需真实数据库
           AI_API_KEY: dummy-key-for-ci
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: backend/target/site/jacoco/jacoco.xml
-          flags: backend
-          fail_ci_if_error: false
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Print coverage summary
+        working-directory: backend
+        run: mvn -B jacoco:report && cat target/site/jacoco/index.html | grep -o 'Total[^%]*%' | head -5 || echo "Coverage report generated at target/site/jacoco/index.html"
 
   frontend:
     name: Frontend (React / TypeScript)

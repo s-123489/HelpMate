@@ -4,7 +4,6 @@
 > 创新点：实时位置 + 订单状态机 + 钱包支付的组合。
 
 [![CI](https://github.com/s-123489/HelpMate/actions/workflows/ci.yml/badge.svg)](https://github.com/s-123489/HelpMate/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/s-123489/HelpMate/branch/main/graph/badge.svg)](https://codecov.io/gh/s-123489/HelpMate)
 
 ## 项目简介
 

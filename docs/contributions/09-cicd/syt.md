@@ -7,8 +7,7 @@
 ### 工作流相关
 
 - [x] 参与编写 `.github/workflows/ci.yml`（backend + frontend 两个 job）
-- [x] 配置 Codecov 覆盖率上传（backend flag）
-- [x] 添加 README CI 状态徽章及 Codecov 覆盖率徽章
+- [x] 添加 README CI 状态徽章
 
 ### 代码适配
 
@@ -21,7 +20,7 @@
 **backend job：**
 1. 使用 JDK 17（temurin）
 2. `mvn -B test` 运行全部单元测试 + 生成 JaCoCo XML 报告
-3. 通过 `codecov/codecov-action` 上传 `target/site/jacoco/jacoco.xml`
+3. 通过 `mvn jacoco:report` 打印覆盖率摘要到 Actions 日志
 
 **frontend job：**
 1. 使用 Node.js 20
