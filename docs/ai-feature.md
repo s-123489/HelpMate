@@ -1,50 +1,66 @@
-# AI 功能说明
+\# AI 功能说明
 
-## 功能类型
-智能客服 — 基于大语言模型的平台问答助手
 
-## 使用模型
-DeepSeek Chat（`deepseek-chat`），通过 DeepSeek API 调用，与 OpenAI 接口兼容。
 
-## 实现的功能
-用户可以向平台客服提问（如"怎么发布任务"、"如何接单"、"钱包怎么充值"），后端调用 DeepSeek API 生成回答并返回给前端。
+\## 功能概述
 
-## API 接口
+HelpMate 集成了 AI 智能问答功能，用户可以通过自然语言提问，
 
-### POST /api/ai/chat
+获取关于平台使用、任务发布、接单流程等方面的智能解答。
 
-**请求体：**
+
+
+\## 使用模型
+
+\- 模型：DeepSeek
+
+\- 调用方式：云端 API
+
+\- API Key 通过环境变量管理，不提交到代码仓库
+
+
+
+\## 接口信息
+
+\- 路径：POST /api/ai/chat
+
+\- 无需登录即可访问
+
+\- 请求格式：
+
 ```json
+
 {
-  "message": "怎么发布任务？"
+
+&#x20; "message": "我想发布一个取快递的任务，怎么操作？"
+
 }
+
 ```
 
-**响应：**
+\- 返回格式：
+
 ```json
+
 {
-  "code": 200,
-  "message": "success",
-  "data": "您好！发布任务非常简单：点击首页的「发布任务」按钮，填写任务标题、描述、赏金金额和地点，即可发布。其他同学会在任务列表看到并接单。"
+
+&#x20; "code": 200,
+
+&#x20; "message": "success",
+
+&#x20; "data": "您可以点击首页的发布任务按钮..."
+
 }
+
 ```
 
-**认证：** 无需登录即可使用。
 
-## 环境变量配置
 
-```bash
-# 在系统环境变量或启动命令中设置（不要写入代码或 git）
-export AI_API_KEY=your_deepseek_api_key_here
-```
+\## 安全说明
 
-获取 API Key：[https://platform.deepseek.com](https://platform.deepseek.com)
+\- API Key 存储在服务器环境变量中
 
-## 代码位置
+\- 前端无需传递任何密钥
 
-| 文件 | 说明 |
-|------|------|
-| `controller/AIController.java` | 接收请求，调用 service |
-| `service/AIService.java` | 接口定义 |
-| `service/impl/AIServiceImpl.java` | 调用 DeepSeek API，解析响应 |
-| `dto/AIChatRequest.java` | 请求体 DTO |
+\- /api/ai/chat 接口已排除登录拦截，任何用户均可访问
+

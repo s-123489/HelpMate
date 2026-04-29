@@ -1,138 +1,170 @@
-# API 设计文档
+\# API 使用说明
 
-## 基础信息
 
-- Base URL: `http://localhost:8080/api`
-- 数据格式：JSON
-- 认证方式：JWT（在请求头中携带 `Authorization: Bearer <token>`）
 
-## 接口列表
+\## 基本信息
 
-### 用户模块
+\- Base URL：`http://localhost:8080`
 
-#### 注册
+\- 数据格式：JSON
 
-- **POST** `/api/user/register`
-- 请求体：
+\- 认证方式：Bearer Token（JWT）
 
-```json
-{
-  "username": "string",
-  "password": "string",
-  "email": "string",
-  "phone": "string"
-}
-```
 
-- 返回：
+
+\## 统一响应格式
+
+所有接口返回统一格式：
 
 ```json
+
 {
-  "code": 200,
-  "message": "注册成功",
-  "data": null
+
+&#x20; "code": 200,
+
+&#x20; "message": "success",
+
+&#x20; "data": {}
+
 }
+
 ```
 
-#### 登录
 
-- **POST** `/api/user/login`
-- 请求体：
+
+\## 认证说明
+
+登录后获取 token，后续需要认证的接口在请求头加：
+
+```
+
+Authorization: Bearer <token>
+
+```
+
+
+
+\## 接口列表
+
+
+
+\### 用户认证
+
+
+
+\#### 注册
+
+\- 方法：POST
+
+\- 路径：`/api/user/register`
+
+\- 请求体：
 
 ```json
+
 {
-  "username": "string",
-  "password": "string"
+
+&#x20; "username": "lilili",
+
+&#x20; "password": "123456",
+
+&#x20; "email": "lilili@example.com",
+
+&#x20; "phone": "13800138000"
+
 }
+
 ```
 
-- 返回：
+
+
+\#### 登录
+
+\- 方法：POST
+
+\- 路径：`/api/user/login`
+
+\- 请求体：
 
 ```json
+
 {
-  "code": 200,
-  "message": "登录成功",
-  "data": {
-    "token": "string",
-    "username": "string"
-  }
+
+&#x20; "username": "lilili",
+
+&#x20; "password": "123456"
+
 }
+
 ```
 
-### 任务模块
+\- 返回：token、userId、username
 
-#### 发布任务
 
-- **POST** `/api/task/create`
-- 请求头：`Authorization: Bearer <token>`（必须登录）
-- 请求体：
+
+\### 任务管理
+
+
+
+\#### 发布任务（需登录）
+
+\- 方法：POST
+
+\- 路径：`/api/task/create`
+
+\- 请求体：
 
 ```json
+
 {
-  "title": "string",
-  "description": "string",
-  "category": "EXPRESS | FOOD | PURCHASE | OTHER",
-  "reward": 10.00,
-  "location": "string",
-  "deadline": "string"
+
+&#x20; "title": "帮我取快递",
+
+&#x20; "description": "快递柜B区，取件码1234",
+
+&#x20; "category": "EXPRESS",
+
+&#x20; "reward": 5.00,
+
+&#x20; "location": "宿舍楼A栋",
+
+&#x20; "deadline": "2026-03-25 18:00"
+
 }
+
 ```
 
-- 返回：
 
-```json
-{
-  "code": 200,
-  "message": "发布成功",
-  "data": 1
-}
-```
 
-> `data` 为新建任务的 ID
+\#### 获取任务列表
 
-#### 查询任务列表
+\- 方法：GET
 
-- **GET** `/api/task/list?page=1&size=10&category=EXPRESS`
-- 请求头：无需登录
-- 参数说明：
+\- 路径：`/api/task/list`
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| page | int | 否 | 页码，默认 1 |
-| size | int | 否 | 每页条数，默认 10 |
-| category | string | 否 | 分类筛选，不传则返回全部 |
+\- 参数：
 
-- 返回：
+&#x20; - page（默认1）
 
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "total": 100,
-    "size": 10,
-    "current": 1,
-    "records": [
-      {
-        "id": 1,
-        "title": "string",
-        "description": "string",
-        "category": "string",
-        "reward": 10.00,
-        "status": 0,
-        "location": "string",
-        "createdAt": "2026-03-31T12:00:00"
-      }
-    ]
-  }
-}
-```
+&#x20; - size（默认10）
 
-## 通用错误码
+&#x20; - category（可选，EXPRESS/FOOD/PURCHASE/OTHER）
 
-| code | 说明 |
-|------|------|
+
+
+\## 状态码说明
+
+| 状态码 | 说明 |
+
+|--------|------|
+
 | 200 | 成功 |
+
 | 400 | 参数错误 |
-| 401 | 未授权（Token 缺失或过期） |
-| 500 | 服务器内部错误 |
+
+| 401 | 未登录或token失效 |
+
+| 404 | 资源不存在 |
+
+| 500 | 服务器错误 |
+

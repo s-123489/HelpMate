@@ -1,0 +1,326 @@
+openapi: 3.0.0
+info:
+  title: HelpMate API
+  version: 1.0.0
+  description: 校园跑腿/互助平台 RESTful API 文档
+
+servers:
+  - url: http://localhost:8080
+    description: 本地开发环境
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Result:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: success
+        data:
+          type: object
+
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: lilili
+        password:
+          type: string
+          minLength: 6
+          example: "123456"
+        email:
+          type: string
+          example: lilili@example.com
+        phone:
+          type: string
+          example: "13800138000"
+
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: lilili
+        password:
+          type: string
+          example: "123456"
+
+    LoginVO:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiJ9...
+        userId:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: lilili
+
+    CreateTaskRequest:
+      type: object
+      required:
+        - title
+        - category
+        - reward
+      properties:
+        title:
+          type: string
+          example: 帮我取一下快递
+        description:
+          type: string
+          example: 在快递柜B区，取件码1234
+        category:
+          type: string
+          enum: [EXPRESS, FOOD, PURCHASE, OTHER]
+          example: EXPRESS
+        reward:
+          type: number
+          format: decimal
+          minimum: 0.01
+          example: 5.00
+        location:
+          type: string
+          example: 宿舍楼A栋
+        deadline:
+          type: string
+          example: "2026-03-25 18:00"
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        publisherId:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: 帮我取一下快递
+        description:
+          type: string
+        category:
+          type: string
+        reward:
+          type: number
+        status:
+          type: integer
+          description: 0待接单 1进行中 2已完成 3已取消
+          example: 0
+        location:
+          type: string
+        deadline:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+paths:
+  /api/user/register:
+    post:
+      summary: 用户注册
+      tags:
+        - 用户认证
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '200':
+          description: 注册成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result'
+              example:
+                code: 200
+                message: 注册成功
+                data: null
+        '400':
+          description: 参数校验失败
+
+  /api/user/login:
+    post:
+      summary: 用户登录
+      tags:
+        - 用户认证
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Result'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/LoginVO'
+              example:
+                code: 200
+                message: 登录成功
+                data:
+                  token: eyJhbGciOiJIUzI1NiJ9...
+                  userId: 1
+                  username: lilili
+        '400':
+          description: 用户名或密码错误
+
+  /api/task/create:
+    post:
+      summary: 发布任务
+      tags:
+        - 任务管理
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '200':
+          description: 发布成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Result'
+                  - type: object
+                    properties:
+                      data:
+                        type: integer
+                        description: 新建任务ID
+              example:
+                code: 200
+                message: 发布成功
+                data: 42
+        '401':
+          description: 未登录
+
+  /api/task/list:
+    get:
+      summary: 获取任务列表
+      tags:
+        - 任务管理
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: 页码
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: 每页数量
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [EXPRESS, FOOD, PURCHASE, OTHER]
+          description: 任务分类筛选
+      responses:
+        '200':
+          description: 查询成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Result'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          records:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Task'
+                          total:
+                            type: integer
+                          current:
+                            type: integer
+                          size:
+                            type: integer
+              example:
+                code: 200
+                message: success
+                data:
+                  records:
+                    - id: 1
+                      title: 帮我取快递
+                      category: EXPRESS
+                      reward: 5.00
+                      status: 0
+                  total: 1
+                  current: 1
+                  size: 10
+
+/api/ai/chat:
+    post:
+      summary: AI 智能问答
+      tags:
+        - AI功能
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  example: 我想发布一个取快递的任务，怎么操作？
+      responses:
+        '200':
+          description: AI回复成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Result'
+                  - type: object
+                    properties:
+                      data:
+                        type: string
+              example:
+                code: 200
+                message: success
+                data: 您可以点击首页的发布任务按钮，填写任务标题、描述、地点和悬赏金额后提交即可。
+        '400':
+          description: 消息不能为空
