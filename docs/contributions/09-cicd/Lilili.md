@@ -1,76 +1,28 @@
-\[!\[CI](https://github.com/s-123489/HelpMate/actions/workflows/ci.yml/badge.svg)](https://github.com/s-123489/HelpMate/actions)
+# CI/CD 配置贡献说明
 
-\[!\[Backend Coverage](https://codecov.io/gh/s-123489/HelpMate/branch/main/graph/badge.svg?flag=backend)](https://codecov.io/gh/s-123489/HelpMate)
+姓名：李丽丽  日期：2026-05-05
 
-\[!\[Frontend Coverage](https://codecov.io/gh/s-123489/HelpMate/branch/main/graph/badge.svg?flag=frontend)](https://codecov.io/gh/s-123489/HelpMate)
+## 完成的工作
 
+### 工作流相关
 
+- [x] 参与审查 `.github/workflows/ci.yml`
+- [x] 添加 README 状态徽章（CI、Backend Coverage、Frontend Coverage）
 
-\# HelpMate
+### 代码适配
 
-
-
-校园跑腿/互助平台
-
-
-
-\## 项目简介
-
-HelpMate 是一个面向校园用户的跑腿/互助平台，支持发布任务、接单、实时位置、评价系统和钱包支付。
+- [x] 将前端分支、后端分支合并至 main 分支，解决 merge conflict
 
 
 
-\## 技术栈
+## CI 运行链接
 
-\- 前端：React Native / 小程序
+- https://github.com/s-123489/HelpMate/actions/runs/25088539097
 
-\- 后端：Spring Boot 3.x + MyBatis
+## 遇到的问题和解决
 
-\- 数据库：MySQL 8.0
+1. 问题：合并前后端分支时 README.md 出现 merge conflict → 解决：手动整合两个版本内容，统一成一份完整 README
 
-\- 部署：Docker Compose
+## 心得体会
 
-
-
-\## 团队分工
-
-| 姓名 | 角色 | 负责内容 |
-
-|------|------|----------|
-
-| Cxt | 前端 | 页面开发、组件封装、API对接 |
-
-| Syt | 后端 | API实现、数据库、Docker部署 |
-
-| Lilili | API | 接口设计、数据库设计、文档 |
-
-
-
-\## 项目文档
-
-\- \[API 设计文档](docs/api.yaml)
-
-\- \[API 使用说明](docs/api.md)
-
-\- \[数据库设计](docs/database.md)
-
-\- \[架构设计](docs/architecture.md)
-
-\- \[AI功能说明](docs/ai-feature.md)
-
-
-
-\## 快速启动
-
-```bash
-
-docker-compose up -d
-
-```
-
-
-
-\## Figma 设计稿
-
-https://www.figma.com/design/dxKa3GWXKRiBquoFIdwZpl/HelpMate-UI-Design
-
+本次负责将各成员分支合并至 main，并整合前后端 README、添加 CI/CD 状态徽章。在处理合并冲突的过程中，更直观地理解了多人协作开发时分支管理的重要性，也了解了 GitHub Actions 徽章与 Codecov 覆盖率的配置方式。
