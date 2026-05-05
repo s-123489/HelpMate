@@ -1,34 +1,25 @@
-  name: CI                                                                               
-                       
-  on:
+name: CI
+                                                                                         
+on:                  
     push:
       branches: [main, develop]
     pull_request:
       branches: [main]
 
-  jobs:
+jobs:
     backend:
       name: Backend (Java / Maven)
       runs-on: ubuntu-latest
-
       steps:
         - uses: actions/checkout@v4
-
         - name: Set up JDK 17
           uses: actions/setup-java@v4
           with:
             java-version: '17'
             distribution: 'temurin'
             cache: maven
-
-        - name: Run tests & generate JaCoCo report
+        - name: Run tests
           working-directory: backend
           run: mvn -B test
           env:
             AI_API_KEY: dummy-key-for-ci
-
-        - name: Print coverage summary
-          working-directory: backend
-          run: mvn -B jacoco:report && cat target/site/jacoco/index.html | grep -o       
-  'Total[^%]*%' | head -5 || echo "Coverage report generated at
-  target/site/jacoco/index.html"
