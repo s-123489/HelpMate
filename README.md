@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # HelpMate — 校园跑腿 / 互助平台
 
 > 业务逻辑完整，贴近校园生活。技术栈：React / Vite + Spring Boot。  
@@ -154,3 +155,4 @@ npm test           # 全部测试 + 覆盖率报告
 ## License
 
 MIT
+
