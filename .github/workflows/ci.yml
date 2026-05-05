@@ -21,13 +21,13 @@ jobs:
 
       - name: Install dependencies
         working-directory: frontend
-        run: npm install
+        run: |
+          npm install
+          chmod -R +x node_modules/.bin
 
       - name: Lint
         working-directory: frontend
-        run: |
-          chmod +x node_modules/.bin/eslint
-          npm run lint
+        run: npm run lint
 
       - name: Run tests with coverage
         working-directory: frontend
