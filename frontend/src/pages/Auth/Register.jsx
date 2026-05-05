@@ -1,15 +1,20 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
+import { mockApi } from '../../services/mockApi';
+import { setToken, setUser } from '../../utils/auth';
 
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    username: '',
+    studentId: '',
+    name: '',
+    phone: '',
     password: '',
     confirmPassword: ''
   });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -17,26 +22,51 @@ const Register = () => {
       ...prev,
       [name]: value
     }));
+    setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // 表单验证
     if (formData.password !== formData.confirmPassword) {
       setError('两次输入的密码不一致');
       return;
     }
-    
+
     if (formData.password.length < 6) {
       setError('密码长度至少6位');
       return;
     }
-    
-    // 模拟注册成功
+
+    if (!/^1[3-9]\d{9}$/.test(formData.phone)) {
+      setError('请输入正确的手机号');
+      return;
+    }
+
+    setLoading(true);
     setError('');
-    alert('注册成功！请登录');
-    navigate('/login');
+
+    try {
+      const response = await mockApi.register({
+        studentId: formData.studentId,
+        name: formData.name,
+        phone: formData.phone,
+        password: formData.password
+      });
+
+      if (response.success) {
+        // 注册成功后自动登录
+        setToken(response.data.token);
+        setUser(response.data.user);
+        alert('注册成功！');
+        navigate('/');
+      }
+    } catch (err) {
+      setError(err.message || '注册失败，请重试');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogin = () => {
@@ -61,10 +91,34 @@ const Register = () => {
           <div className="form-group">
             <input
               type="text"
-              name="username"
+              name="studentId"
               className="form-input"
-              placeholder="用户名："
-              value={formData.username}
+              placeholder="学号："
+              value={formData.studentId}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <input
+              type="text"
+              name="name"
+              className="form-input"
+              placeholder="姓名："
+              value={formData.name}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <input
+              type="tel"
+              name="phone"
+              className="form-input"
+              placeholder="手机号："
+              value={formData.phone}
               onChange={handleInputChange}
               required
             />
@@ -94,8 +148,8 @@ const Register = () => {
             />
           </div>
 
-          <button type="submit" className="submit-btn">
-            注册
+          <button type="submit" className="submit-btn" disabled={loading}>
+            {loading ? '注册中...' : '注册'}
           </button>
         </form>
 
