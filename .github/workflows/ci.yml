@@ -60,4 +60,6 @@ jobs:
           fail_ci_if_error: false
       - name: Build
         working-directory: frontend
-        run: npm run build
+        run: |
+          chmod +x node_modules/.bin/vite
+          npm run build
