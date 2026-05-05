@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { mockApi } from '../services/mockApi';
 
 describe('Mock API Tests', () => {

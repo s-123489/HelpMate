@@ -1,6 +1,8 @@
 # HelpMate - 校园跑腿互助平台
 
-[![Frontend Coverage](https://codecov.io/gh/<用户名>/<仓库名>/branch/main/graph/badge.svg?flag=frontend)](https://codecov.io/gh/<用户名>/<仓库名>)
+[![CI](https://github.com/s-123489/HelpMate/actions/workflows/ci.yml/badge.svg)](https://github.com/s-123489/HelpMate/actions)
+[![Backend Coverage](https://codecov.io/gh/s-123489/HelpMate/branch/main/graph/badge.svg?flag=backend)](https://codecov.io/gh/s-123489/HelpMate)
+[![Frontend Coverage](https://codecov.io/gh/s-123489/HelpMate/branch/main/graph/badge.svg?flag=frontend)](https://codecov.io/gh/s-123489/HelpMate)
 
 ## 项目简介
 

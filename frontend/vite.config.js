@@ -19,6 +19,8 @@ export default defineConfig({
         'node_modules/',
         'src/test/',
         '**/*.config.js',
+        '**/*.config.cjs',
+        '**/*.eslintrc.cjs',
         '**/main.jsx'
       ]
     }

@@ -333,7 +333,6 @@ export const mockApi = {
     task.accepterId = userId;
 
     // 添加消息通知
-    const publisher = users.find(u => u.id === task.publisherId);
     const accepter = users.find(u => u.id === userId);
 
     messages.push({

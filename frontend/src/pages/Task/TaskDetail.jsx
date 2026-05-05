@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import './TaskDetail.css';
 import { mockApi } from '../../services/mockApi';
@@ -9,14 +9,9 @@ const TaskDetail = () => {
   const { id } = useParams();
   const [task, setTask] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const currentUser = getUser();
 
-  useEffect(() => {
-    loadTaskDetail();
-  }, [id]);
-
-  const loadTaskDetail = async () => {
+  const loadTaskDetail = useCallback(async () => {
     try {
       setLoading(true);
       const response = await mockApi.getTaskDetail(id);
@@ -24,11 +19,15 @@ const TaskDetail = () => {
         setTask(response.data);
       }
     } catch (err) {
-      setError(err.message || '加载失败');
+      alert(err.message || '加载失败');
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    loadTaskDetail();
+  }, [loadTaskDetail]);
 
   const handleAcceptTask = async () => {
     if (!currentUser) {
@@ -181,6 +180,13 @@ const TaskDetail = () => {
         <div className="action-section">
           <button className="accept-btn" onClick={handleAcceptTask}>
             接取任务
+          </button>
+        </div>
+      )}
+      {task.status === '进行中' && currentUser && task.accepterId === currentUser.id && (
+        <div className="action-section">
+          <button className="accept-btn" onClick={handleCompleteTask}>
+            完成任务
           </button>
         </div>
       )}
