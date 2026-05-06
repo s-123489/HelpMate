@@ -1,6 +1,10 @@
 # CI/CD 配置贡献说明
 
+<<<<<<< HEAD
 姓名：李丽丽　角色：API　日期：2026-05-05
+=======
+姓名：李丽丽　　角色：API　日期：2026-05-05
+>>>>>>> develop
 
 ## 完成的工作
 
@@ -20,7 +24,11 @@
 
 ## CI 运行链接
 
+<<<<<<< HEAD
 - https://github.com/s-123489/HelpMate/actions/runs/25366557131
+=======
+- https://github.com/s-123489/HelpMate/actions/runs/25367904417
+>>>>>>> develop
 
 ## 遇到的问题和解决
 
