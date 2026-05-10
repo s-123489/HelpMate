@@ -173,12 +173,9 @@ export const mockApi = {
 
     const user = users.find(u => u.studentId === studentId);
 
-    if (!user) {
-      throw new Error('学号不存在');
-    }
-
-    if (user.password !== password) {
-      throw new Error('密码错误');
+    // 统一错误信息，避免账号枚举攻击
+    if (!user || user.password !== password) {
+      throw new Error('学号或密码错误');
     }
 
     return {
