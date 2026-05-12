@@ -3,6 +3,8 @@ package com.helpmate.service.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.helpmate.service.AIService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,8 @@ import java.time.Duration;
 
 @Service
 public class AIServiceImpl implements AIService {
+
+    private static final Logger log = LoggerFactory.getLogger(AIServiceImpl.class);
 
     @Value("${ai.api-key}")
     private String apiKey;
@@ -62,7 +66,8 @@ public class AIServiceImpl implements AIService {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() != 200) {
-                throw new RuntimeException("AI 服务请求失败，状态码：" + response.statusCode());
+                log.error("AI service returned status code: {}", response.statusCode());
+                throw new RuntimeException("AI 服务暂时不可用，请稍后重试");
             }
 
             JsonNode root = objectMapper.readTree(response.body());
@@ -71,7 +76,8 @@ public class AIServiceImpl implements AIService {
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
-            throw new RuntimeException("AI 服务调用失败：" + e.getMessage());
+            log.error("AI service call failed", e);
+            throw new RuntimeException("AI 服务暂时不可用，请稍后重试");
         }
     }
 }
