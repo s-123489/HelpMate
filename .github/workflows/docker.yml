@@ -27,8 +27,6 @@ jobs:
           context: ./backend
           push: true
           tags: ghcr.io/${{ github.repository }}/backend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Scan for vulnerabilities
         uses: aquasecurity/trivy-action@master
