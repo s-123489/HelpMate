@@ -1,76 +1,34 @@
-\[!\[CI](https://github.com/s-123489/HelpMate/actions/workflows/ci.yml/badge.svg)](https://github.com/s-123489/HelpMate/actions)
+# CI/CD 配置贡献说明
 
-\[!\[Backend Coverage](https://codecov.io/gh/s-123489/HelpMate/branch/main/graph/badge.svg?flag=backend)](https://codecov.io/gh/s-123489/HelpMate)
+姓名：李丽丽　　角色：API　日期：2026-05-05
 
-\[!\[Frontend Coverage](https://codecov.io/gh/s-123489/HelpMate/branch/main/graph/badge.svg?flag=frontend)](https://codecov.io/gh/s-123489/HelpMate)
+## 完成的工作
 
+### 工作流相关
 
+- [x] 参与审查并合并 `.github/workflows/ci.yml`
+- [x] 整合 backend 和 frontend 两个 job 到同一个 ci.yml
+- [x] 配置 Codecov Token 到 GitHub Secrets
+- [x] 配置 Codecov 覆盖率上传（backend / frontend flag）
+- [x] 添加 README 状态徽章（CI、Backend Coverage、Frontend Coverage）
 
-\# HelpMate
+### 代码适配
 
+- [x] 更新 frontend/package-lock.json 修复 CI 依赖问题
+- [x] 修复 vite build 权限问题（chmod +x）
+- [x] 将 develop 分支合并至 main，解决多次 merge conflict
 
+## CI 运行链接
 
-校园跑腿/互助平台
+- https://github.com/s-123489/HelpMate/actions/runs/25367904417
 
+## 遇到的问题和解决
 
+1. 问题：README.md 存在 merge conflict → 解决：手动整合前后端两个版本
+2. 问题：frontend npm ci 失败，package-lock.json 缺少 esbuild 相关包 → 解决：本地重新执行 npm install 更新 lock 文件
+3. 问题：vite build 报 Permission denied → 解决：在 ci.yml 中加入 chmod +x node_modules/.bin/vite
+4. 问题：codecov 徽章显示 unknown → 解决：配置 CODECOV_TOKEN 到 GitHub Secrets 并更新 ci.yml 上传覆盖率
 
-\## 项目简介
+## 心得体会
 
-HelpMate 是一个面向校园用户的跑腿/互助平台，支持发布任务、接单、实时位置、评价系统和钱包支付。
-
-
-
-\## 技术栈
-
-\- 前端：React Native / 小程序
-
-\- 后端：Spring Boot 3.x + MyBatis
-
-\- 数据库：MySQL 8.0
-
-\- 部署：Docker Compose
-
-
-
-\## 团队分工
-
-| 姓名 | 角色 | 负责内容 |
-
-|------|------|----------|
-
-| Cxt | 前端 | 页面开发、组件封装、API对接 |
-
-| Syt | 后端 | API实现、数据库、Docker部署 |
-
-| Lilili | API | 接口设计、数据库设计、文档 |
-
-
-
-\## 项目文档
-
-\- \[API 设计文档](docs/api.yaml)
-
-\- \[API 使用说明](docs/api.md)
-
-\- \[数据库设计](docs/database.md)
-
-\- \[架构设计](docs/architecture.md)
-
-\- \[AI功能说明](docs/ai-feature.md)
-
-
-
-\## 快速启动
-
-```bash
-
-docker-compose up -d
-
-```
-
-
-
-\## Figma 设计稿
-
-https://www.figma.com/design/dxKa3GWXKRiBquoFIdwZpl/HelpMate-UI-Design
-
+本次负责 CI/CD 整体配置与整合，包括合并各成员分支、解决冲突、配置 Codecov 覆盖率上传。过程中多次遇到 merge conflict 和 CI 报错，通过逐步排查解决了依赖缺失、权限问题等。深刻理解了多人协作时分支管理和 CI 配置的重要性。
