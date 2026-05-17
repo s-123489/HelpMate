@@ -84,11 +84,6 @@ const Login = () => {
           <button type="submit" className="submit-btn" disabled={loading}>
             {loading ? '登录中...' : '登入'}
           </button>
-
-          <div className="demo-hint">
-            <p>测试账号：2021001 密码：123456</p>
-            <p>测试账号：2021002 密码：123456</p>
-          </div>
         </form>
 
         <div className="register-link">

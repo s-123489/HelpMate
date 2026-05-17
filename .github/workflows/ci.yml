@@ -41,12 +41,12 @@ jobs:
           node-version: '20'
       - name: Install dependencies
         working-directory: frontend
-        run: npm install
+        run: |
+          npm install
+          chmod -R +x node_modules/.bin
       - name: Lint
         working-directory: frontend
-        run: |
-          chmod +x node_modules/.bin/eslint
-          npm run lint
+        run: npm run lint
       - name: Run tests with coverage
         working-directory: frontend
         run: npm run test:coverage
@@ -60,6 +60,4 @@ jobs:
           fail_ci_if_error: false
       - name: Build
         working-directory: frontend
-        run: |
-          chmod +x node_modules/.bin/vite
-          npm run build
+        run: npm run build
