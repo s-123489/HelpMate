@@ -14,7 +14,7 @@ describe('Mock API Tests', () => {
     });
 
     it('登录失败 - 学号不存在应该抛出错误', async () => {
-      await expect(mockApi.login('9999999', '123456')).rejects.toThrow('学号不存在');
+      await expect(mockApi.login('9999999', '123456')).rejects.toThrow('学号或密码错误');
     });
 
     it('登录失败 - 密码错误应该抛出错误', async () => {
