@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
 import { api } from '../../services/api';
-import { setToken, setUser } from '../../utils/auth';
 
 const Register = () => {
   const navigate = useNavigate();
