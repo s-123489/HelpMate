@@ -170,6 +170,7 @@ const AIChat = () => {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             rows="1"
+            maxLength={500}
           />
           <button
             className="send-btn"

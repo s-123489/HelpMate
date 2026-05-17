@@ -1,3 +1,6 @@
+# Dependencies
+node_modules/
+
 # IntelliJ IDEA
 .idea/
 *.iml
@@ -14,3 +17,4 @@ Thumbs.db
 .env
 .env.local
 .env.production
+.env.*.local
