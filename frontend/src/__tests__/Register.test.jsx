@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Register from '../pages/Auth/Register';
-import { mockApi } from '../services/mockApi';
+import { api } from '../services/api';
 
 // Mock react-router-dom
 const mockNavigate = vi.fn();
@@ -14,22 +14,17 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-// Mock mockApi
-vi.mock('../services/mockApi', () => ({
-  mockApi: {
+// Mock api
+vi.mock('../services/api', () => ({
+  api: {
     register: vi.fn(),
   },
-}));
-
-// Mock auth utils
-vi.mock('../utils/auth', () => ({
-  setToken: vi.fn(),
-  setUser: vi.fn(),
 }));
 
 describe('Register Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(window, 'alert').mockImplementation(() => {});
   });
 
   it('应该渲染注册表单', () => {
@@ -40,9 +35,9 @@ describe('Register Component', () => {
     );
 
     expect(screen.getByText('HelpMate')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('学号：')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('姓名：')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('手机号：')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('用户名：')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('手机号（选填）：')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('邮箱（选填）：')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('密码：')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('确认密码：')).toBeInTheDocument();
   });
@@ -54,9 +49,7 @@ describe('Register Component', () => {
       </BrowserRouter>
     );
 
-    fireEvent.change(screen.getByPlaceholderText('学号：'), { target: { value: '2021003' } });
-    fireEvent.change(screen.getByPlaceholderText('姓名：'), { target: { value: '测试用户' } });
-    fireEvent.change(screen.getByPlaceholderText('手机号：'), { target: { value: '13800138000' } });
+    fireEvent.change(screen.getByPlaceholderText('用户名：'), { target: { value: 'testuser' } });
     fireEvent.change(screen.getByPlaceholderText('密码：'), { target: { value: '123456' } });
     fireEvent.change(screen.getByPlaceholderText('确认密码：'), { target: { value: '654321' } });
 
@@ -75,9 +68,7 @@ describe('Register Component', () => {
       </BrowserRouter>
     );
 
-    fireEvent.change(screen.getByPlaceholderText('学号：'), { target: { value: '2021003' } });
-    fireEvent.change(screen.getByPlaceholderText('姓名：'), { target: { value: '测试用户' } });
-    fireEvent.change(screen.getByPlaceholderText('手机号：'), { target: { value: '13800138000' } });
+    fireEvent.change(screen.getByPlaceholderText('用户名：'), { target: { value: 'testuser' } });
     fireEvent.change(screen.getByPlaceholderText('密码：'), { target: { value: '123' } });
     fireEvent.change(screen.getByPlaceholderText('确认密码：'), { target: { value: '123' } });
 
@@ -96,9 +87,8 @@ describe('Register Component', () => {
       </BrowserRouter>
     );
 
-    fireEvent.change(screen.getByPlaceholderText('学号：'), { target: { value: '2021003' } });
-    fireEvent.change(screen.getByPlaceholderText('姓名：'), { target: { value: '测试用户' } });
-    fireEvent.change(screen.getByPlaceholderText('手机号：'), { target: { value: '12345' } });
+    fireEvent.change(screen.getByPlaceholderText('用户名：'), { target: { value: 'testuser' } });
+    fireEvent.change(screen.getByPlaceholderText('手机号（选填）：'), { target: { value: '12345' } });
     fireEvent.change(screen.getByPlaceholderText('密码：'), { target: { value: '123456' } });
     fireEvent.change(screen.getByPlaceholderText('确认密码：'), { target: { value: '123456' } });
 
@@ -110,12 +100,11 @@ describe('Register Component', () => {
     });
   });
 
-  it('注册成功后应该跳转到首页', async () => {
-    mockApi.register.mockResolvedValue({
+  it('注册成功后应该跳转到登录页面', async () => {
+    api.register.mockResolvedValue({
       success: true,
       data: {
-        token: 'mock_token',
-        user: { id: 3, name: '测试用户' },
+        user: { id: 3, username: 'testuser' },
       },
     });
 
@@ -125,9 +114,9 @@ describe('Register Component', () => {
       </BrowserRouter>
     );
 
-    fireEvent.change(screen.getByPlaceholderText('学号：'), { target: { value: '2021003' } });
-    fireEvent.change(screen.getByPlaceholderText('姓名：'), { target: { value: '测试用户' } });
-    fireEvent.change(screen.getByPlaceholderText('手机号：'), { target: { value: '13800138000' } });
+    fireEvent.change(screen.getByPlaceholderText('用户名：'), { target: { value: 'testuser' } });
+    fireEvent.change(screen.getByPlaceholderText('手机号（选填）：'), { target: { value: '13800138000' } });
+    fireEvent.change(screen.getByPlaceholderText('邮箱（选填）：'), { target: { value: 'test@example.com' } });
     fireEvent.change(screen.getByPlaceholderText('密码：'), { target: { value: '123456' } });
     fireEvent.change(screen.getByPlaceholderText('确认密码：'), { target: { value: '123456' } });
 
@@ -135,7 +124,7 @@ describe('Register Component', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      expect(mockNavigate).toHaveBeenCalledWith('/login');
     });
   });
 

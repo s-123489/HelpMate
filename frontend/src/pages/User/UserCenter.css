@@ -1,15 +1,17 @@
 .user-center-container {
   min-height: 100vh;
-  background-color: #f5f5f5;
-  padding: 20px;
+  background-color: var(--color-bg);
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .user-profile-card {
-  background: #1E90FF;
-  border-radius: 12px;
-  padding: 24px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, #3b82f6 100%);
+  border-radius: var(--radius-lg);
+  padding: 28px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .profile-content {
@@ -19,28 +21,33 @@
 }
 
 .avatar {
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid white;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
 }
 
 .profile-info {
   flex: 1;
   color: white;
+  min-width: 0;
 }
 
 .user-name {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 4px;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  letter-spacing: -0.3px;
+  word-break: break-word;
 }
 
 .user-phone {
   font-size: 14px;
   margin-bottom: 8px;
-  opacity: 0.9;
+  opacity: 0.85;
 }
 
 .user-rating {
@@ -51,180 +58,199 @@
 }
 
 .star-icon {
-  color: #FFD700;
+  color: #FCD34D;
 }
 
 .rating-value {
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .settings-btn {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.18);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
+  border-radius: var(--radius-pill);
   padding: 8px 16px;
   color: white;
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s;
+  font-weight: 500;
+  flex-shrink: 0;
 }
 
 .settings-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
 }
 
 .tabs-section {
   display: flex;
-  background: white;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+  padding: 4px;
+  border: 1px solid var(--color-border);
 }
 
 .tab-btn {
   flex: 1;
-  padding: 16px;
+  padding: 12px;
   background: none;
   border: none;
-  font-size: 16px;
-  font-weight: 500;
-  color: #666;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s;
   text-align: center;
 }
 
 .tab-btn.active {
-  background: #1E90FF;
+  background: var(--color-primary);
   color: white;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
 }
 
-.tab-btn:hover {
-  background: #f0f7ff;
-}
-
-.tab-btn.active:hover {
-  background: #1E90FF;
+.tab-btn:not(.active):hover {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
 }
 
 .tasks-section {
   margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .task-item {
-  background: white;
-  border-radius: 12px;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
   padding: 20px;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+  transition: all 0.2s;
+}
+
+.task-item:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
 }
 
 .task-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+  gap: 12px;
 }
 
 .task-title {
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: var(--color-text);
   flex: 1;
-  margin-right: 12px;
+  line-height: 1.4;
 }
 
 .status-badge {
   padding: 4px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius-pill);
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .status-badge.blue {
-  background: #cce7ff;
-  color: #004085;
+  background: #dbeafe;
+  color: #1e40af;
 }
 
 .status-badge.orange {
-  background: #fff3cd;
-  color: #856404;
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .status-badge.green {
-  background: #d4edda;
-  color: #155724;
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .task-reward {
-  font-size: 14px;
-  color: #ff6b6b;
-  font-weight: 500;
+  font-size: 16px;
+  color: var(--color-accent);
+  font-weight: 700;
   margin-bottom: 8px;
 }
 
 .task-accepter {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 14px;
 }
 
 .task-actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 
 .detail-btn {
   flex: 1;
   padding: 10px;
-  background: #f0f0f0;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   font-size: 14px;
-  color: #666;
+  color: var(--color-text-secondary);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s;
+  font-weight: 500;
 }
 
 .detail-btn:hover {
-  background: #e0e0e0;
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .contact-btn {
   flex: 1;
   padding: 10px;
-  background: #1E90FF;
-  border: 1px solid #1E90FF;
-  border-radius: 8px;
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
   font-size: 14px;
   color: white;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s;
+  font-weight: 500;
 }
 
 .contact-btn:hover {
-  background: #187bcd;
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
 }
 
 .logout-btn {
   width: 100%;
-  padding: 16px;
-  background: white;
-  color: #666;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 500;
+  padding: 14px;
+  background: var(--color-surface);
+  color: var(--color-danger);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+  box-shadow: var(--shadow-sm);
 }
 
 .logout-btn:hover {
-  background: #f8f9fa;
-  border-color: #dee2e6;
+  background: #fef2f2;
+  border-color: #fecaca;
 }
 
 .loading {
@@ -232,43 +258,33 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  font-size: 18px;
-  color: #666;
+  font-size: 16px;
+  color: var(--color-text-secondary);
 }
 
 @media (max-width: 768px) {
   .user-center-container {
     padding: 16px;
   }
-  
+  .user-profile-card {
+    padding: 20px;
+  }
   .profile-content {
     flex-direction: column;
     text-align: center;
-    gap: 16px;
+    gap: 14px;
   }
-  
-  .profile-info {
-    order: 1;
-  }
-  
-  .avatar {
-    order: 0;
-  }
-  
-  .settings-btn {
-    order: 2;
-  }
-  
+  .profile-info { order: 1; }
+  .avatar { order: 0; }
+  .settings-btn { order: 2; }
   .task-actions {
     flex-direction: column;
   }
-  
   .task-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
   .status-badge {
     align-self: flex-start;
   }

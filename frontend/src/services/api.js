@@ -1,5 +1,5 @@
 // 真实后端 API 服务
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // 获取 token
 const getToken = () => localStorage.getItem('helpmate_token');
