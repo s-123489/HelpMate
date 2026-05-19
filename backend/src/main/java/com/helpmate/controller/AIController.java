@@ -17,6 +17,6 @@ public class AIController {
     @PostMapping("/chat")
     public Result<String> chat(@Valid @RequestBody AIChatRequest request) {
         String reply = aiService.chat(request.getMessage());
-        return Result.success(reply);
+        return Result.success("success", reply);
     }
 }
