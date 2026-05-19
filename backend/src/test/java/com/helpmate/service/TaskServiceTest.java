@@ -4,7 +4,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.helpmate.dto.CreateTaskRequest;
 import com.helpmate.entity.Task;
+import com.helpmate.mapper.OrderInfoMapper;
 import com.helpmate.mapper.TaskMapper;
+import com.helpmate.service.NotificationService;
+import com.helpmate.service.WalletService;
 import com.helpmate.service.impl.TaskServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +27,15 @@ class TaskServiceTest {
 
     @Mock
     private TaskMapper taskMapper;
+
+    @Mock
+    private WalletService walletService;
+
+    @Mock
+    private NotificationService notificationService;
+
+    @Mock
+    private OrderInfoMapper orderInfoMapper;
 
     @InjectMocks
     private TaskServiceImpl taskService;
