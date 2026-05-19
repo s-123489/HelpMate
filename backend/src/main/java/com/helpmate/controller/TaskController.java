@@ -5,6 +5,7 @@ import com.helpmate.common.Result;
 import com.helpmate.dto.CreateTaskRequest;
 import com.helpmate.entity.Task;
 import com.helpmate.service.TaskService;
+import com.helpmate.vo.TaskDetailVO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,5 +33,24 @@ public class TaskController {
             @RequestParam(required = false) String category) {
         Page<Task> result = taskService.listTasks(page, size, category);
         return Result.success(result);
+    }
+
+    @GetMapping("/{id}")
+    public Result<TaskDetailVO> getTaskDetail(@PathVariable Long id) {
+        return Result.success(taskService.getTaskDetail(id));
+    }
+
+    @PostMapping("/{id}/accept")
+    public Result<Void> acceptTask(@PathVariable Long id, HttpServletRequest httpRequest) {
+        Long userId = (Long) httpRequest.getAttribute("userId");
+        taskService.acceptTask(id, userId);
+        return Result.success("接单成功", null);
+    }
+
+    @PostMapping("/{id}/complete")
+    public Result<Void> completeTask(@PathVariable Long id, HttpServletRequest httpRequest) {
+        Long userId = (Long) httpRequest.getAttribute("userId");
+        taskService.completeTask(id, userId);
+        return Result.success("已完成", null);
     }
 }

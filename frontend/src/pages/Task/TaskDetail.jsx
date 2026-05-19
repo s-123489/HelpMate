@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import './TaskDetail.css';
-import { mockApi } from '../../services/mockApi';
+import { api } from '../../services/api';
 import { getUser } from '../../utils/auth';
 
 const TaskDetail = () => {
@@ -9,12 +9,13 @@ const TaskDetail = () => {
   const { id } = useParams();
   const [task, setTask] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const currentUser = getUser();
 
   const loadTaskDetail = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await mockApi.getTaskDetail(id);
+      const response = await api.getTaskDetail(id);
       if (response.success) {
         setTask(response.data);
       }
@@ -35,34 +36,35 @@ const TaskDetail = () => {
       navigate('/login');
       return;
     }
-
+    setSubmitting(true);
     try {
-      const response = await mockApi.acceptTask(task.id, currentUser.id);
-      if (response.success) {
-        alert('接单成功！');
-        loadTaskDetail(); // 重新加载任务详情
-      }
+      await api.acceptTask(task.id);
+      alert('接单成功！');
+      loadTaskDetail();
     } catch (err) {
       alert(err.message || '接单失败');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleCompleteTask = async () => {
+    setSubmitting(true);
     try {
-      const response = await mockApi.completeTask(task.id);
-      if (response.success) {
-        alert('任务已完成！');
-        loadTaskDetail();
-      }
+      await api.completeTask(task.id);
+      alert('任务已完成！');
+      loadTaskDetail();
     } catch (err) {
       alert(err.message || '操作失败');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleContact = () => {
-    const contactPerson = task.status === 'pending' ? task.publisher : task.accepter;
-    if (contactPerson && contactPerson.phone) {
-      alert(`联系电话：${contactPerson.phone}`);
+    const phone = task.status === 0 ? task.publisherPhone : task.accepterPhone;
+    if (phone) {
+      alert(`联系电话：${phone}`);
     } else {
       alert('联系方式不可用');
     }
@@ -76,15 +78,15 @@ const TaskDetail = () => {
     return <div className="error">任务不存在</div>;
   }
 
-  const getStatusClass = (status) => {
-    const statusMap = {
-      '待接取': 'pending',
-      '进行中': 'in-progress',
-      '已完成': 'completed',
-      '已取消': 'cancelled'
-    };
-    return statusMap[status] || 'pending';
+  const statusClassMap = {
+    0: 'pending',
+    1: 'in-progress',
+    2: 'completed',
+    3: 'cancelled',
   };
+
+  const isPublisher = currentUser && currentUser.id === task.publisherId;
+  const isAccepter = currentUser && currentUser.id === task.accepterId;
 
   return (
     <div className="task-detail-container">
@@ -95,17 +97,19 @@ const TaskDetail = () => {
       </header>
 
       <div className="time-status-section">
-        <span className={`status-badge ${getStatusClass(task.status)}`}>
-          {task.status}
+        <span className={`status-badge ${statusClassMap[task.status] || 'pending'}`}>
+          {task.statusText}
         </span>
         <div className="time-info">
           <div className="time-row">
             <span className="time-label">发布时间：</span>
-            <span className="time-value">{task.publishTime}</span>
+            <span className="time-value">
+              {task.createdAt ? task.createdAt.replace('T', ' ').slice(0, 16) : '-'}
+            </span>
           </div>
           <div className="time-row">
             <span className="time-label">截止时间：</span>
-            <span className="time-value">{task.deadline}</span>
+            <span className="time-value">{task.deadline || '-'}</span>
           </div>
         </div>
       </div>
@@ -124,7 +128,7 @@ const TaskDetail = () => {
             <span className="icon">📝</span>
             <span>任务描述：</span>
           </div>
-          <div className="info-content description">{task.description}</div>
+          <div className="info-content description">{task.description || '无'}</div>
         </div>
 
         <div className="info-item">
@@ -132,7 +136,7 @@ const TaskDetail = () => {
             <span className="icon">📍</span>
             <span>取件地点：</span>
           </div>
-          <div className="info-content">{task.pickupLocation}</div>
+          <div className="info-content">{task.pickupLocation || '-'}</div>
         </div>
 
         <div className="info-item">
@@ -140,7 +144,7 @@ const TaskDetail = () => {
             <span className="icon">🚚</span>
             <span>送达地点：</span>
           </div>
-          <div className="info-content">{task.deliveryLocation}</div>
+          <div className="info-content">{task.deliveryLocation || '-'}</div>
         </div>
       </div>
 
@@ -152,15 +156,13 @@ const TaskDetail = () => {
 
         <div className="publisher-card">
           <img
-            src={task.publisher.avatar}
-            alt={task.publisher.name}
+            src={task.publisherAvatar || 'https://via.placeholder.com/60'}
+            alt={task.publisherName}
             className="publisher-avatar"
           />
           <div className="publisher-info">
-            <div className="publisher-name">{task.publisher.name}</div>
-            <div className="publisher-rating">
-              ⭐ {task.publisher.rating}
-            </div>
+            <div className="publisher-name">{task.publisherName || '匿名用户'}</div>
+            <div className="publisher-rating">⭐ 5.0</div>
           </div>
           <button className="contact-btn" onClick={handleContact}>
             私信
@@ -176,17 +178,24 @@ const TaskDetail = () => {
         <div className="reward-label">赏金</div>
       </div>
 
-      {task.status === '待接取' && (
+      {task.status === 0 && !isPublisher && (
         <div className="action-section">
-          <button className="accept-btn" onClick={handleAcceptTask}>
-            接取任务
+          <button className="accept-btn" onClick={handleAcceptTask} disabled={submitting}>
+            {submitting ? '处理中...' : '接取任务'}
           </button>
         </div>
       )}
-      {task.status === '进行中' && currentUser && task.accepterId === currentUser.id && (
+      {task.status === 0 && isPublisher && (
         <div className="action-section">
-          <button className="accept-btn" onClick={handleCompleteTask}>
-            完成任务
+          <button className="accept-btn" disabled>
+            这是你发布的任务
+          </button>
+        </div>
+      )}
+      {task.status === 1 && isAccepter && (
+        <div className="action-section">
+          <button className="accept-btn" onClick={handleCompleteTask} disabled={submitting}>
+            {submitting ? '处理中...' : '完成任务'}
           </button>
         </div>
       )}

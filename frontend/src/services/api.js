@@ -48,7 +48,7 @@ export const api = {
 
   // 用户登录
   // POST /api/user/login
-  // LoginVO: { token, username }
+  // LoginVO: { token, userId, username }
   login: async (username, password) => {
     const data = await request('/user/login', {
       method: 'POST',
@@ -59,6 +59,7 @@ export const api = {
       data: {
         token: data.data.token,
         user: {
+          id: data.data.userId,
           username: data.data.username,
         },
       },
@@ -102,6 +103,30 @@ export const api = {
       message: '任务发布成功',
       data: data.data,
     };
+  },
+
+  // 任务详情
+  // GET /api/task/{id}
+  getTaskDetail: async (taskId) => {
+    const data = await request(`/task/${taskId}`);
+    return {
+      success: true,
+      data: data.data,
+    };
+  },
+
+  // 接取任务
+  // POST /api/task/{id}/accept
+  acceptTask: async (taskId) => {
+    await request(`/task/${taskId}/accept`, { method: 'POST' });
+    return { success: true };
+  },
+
+  // 完成任务
+  // POST /api/task/{id}/complete
+  completeTask: async (taskId) => {
+    await request(`/task/${taskId}/complete`, { method: 'POST' });
+    return { success: true };
   },
 
   // AI 智能问答
