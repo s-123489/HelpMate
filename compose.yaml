@@ -1,8 +1,23 @@
 services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:8080"
+    environment:
+      - VITE_API_BASE_URL=/api
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   backend:
     build: ./backend
     ports:
-      - "8080:8080"
+      - "8081:8080"
     environment:
       - DB_URL=jdbc:mysql://db:3306/helpmate?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
       - DB_USERNAME=root
@@ -26,7 +41,7 @@ services:
       MYSQL_ROOT_PASSWORD: dev123
       MYSQL_DATABASE: helpmate
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - dbdata:/var/lib/mysql
     healthcheck:

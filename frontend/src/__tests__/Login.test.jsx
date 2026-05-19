@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Login from '../pages/Auth/Login';
-import { mockApi } from '../services/mockApi';
+import { api } from '../services/api';
 
 // Mock react-router-dom
 const mockNavigate = vi.fn();
@@ -14,9 +14,9 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-// Mock mockApi
-vi.mock('../services/mockApi', () => ({
-  mockApi: {
+// Mock api
+vi.mock('../services/api', () => ({
+  api: {
     login: vi.fn(),
   },
 }));
@@ -40,30 +40,30 @@ describe('Login Component', () => {
     );
 
     expect(screen.getByText('HelpMate')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('学号：')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('用户名：')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('密码：')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '登入' })).toBeInTheDocument();
   });
 
-  it('应该能够输入学号和密码', () => {
+  it('应该能够输入用户名和密码', () => {
     render(
       <BrowserRouter>
         <Login />
       </BrowserRouter>
     );
 
-    const studentIdInput = screen.getByPlaceholderText('学号：');
+    const usernameInput = screen.getByPlaceholderText('用户名：');
     const passwordInput = screen.getByPlaceholderText('密码：');
 
-    fireEvent.change(studentIdInput, { target: { value: '2021001' } });
+    fireEvent.change(usernameInput, { target: { value: 'testuser' } });
     fireEvent.change(passwordInput, { target: { value: '123456' } });
 
-    expect(studentIdInput.value).toBe('2021001');
+    expect(usernameInput.value).toBe('testuser');
     expect(passwordInput.value).toBe('123456');
   });
 
   it('成功登录后应该跳转到首页', async () => {
-    mockApi.login.mockResolvedValue({
+    api.login.mockResolvedValue({
       success: true,
       data: {
         token: 'mock_token',
@@ -77,11 +77,11 @@ describe('Login Component', () => {
       </BrowserRouter>
     );
 
-    const studentIdInput = screen.getByPlaceholderText('学号：');
+    const usernameInput = screen.getByPlaceholderText('用户名：');
     const passwordInput = screen.getByPlaceholderText('密码：');
     const submitButton = screen.getByRole('button', { name: '登入' });
 
-    fireEvent.change(studentIdInput, { target: { value: '2021001' } });
+    fireEvent.change(usernameInput, { target: { value: 'testuser' } });
     fireEvent.change(passwordInput, { target: { value: '123456' } });
     fireEvent.click(submitButton);
 
@@ -91,7 +91,7 @@ describe('Login Component', () => {
   });
 
   it('登录失败时应该显示错误信息', async () => {
-    mockApi.login.mockRejectedValue(new Error('密码错误'));
+    api.login.mockRejectedValue(new Error('密码错误'));
 
     render(
       <BrowserRouter>
@@ -99,11 +99,11 @@ describe('Login Component', () => {
       </BrowserRouter>
     );
 
-    const studentIdInput = screen.getByPlaceholderText('学号：');
+    const usernameInput = screen.getByPlaceholderText('用户名：');
     const passwordInput = screen.getByPlaceholderText('密码：');
     const submitButton = screen.getByRole('button', { name: '登入' });
 
-    fireEvent.change(studentIdInput, { target: { value: '2021001' } });
+    fireEvent.change(usernameInput, { target: { value: 'testuser' } });
     fireEvent.change(passwordInput, { target: { value: 'wrong' } });
     fireEvent.click(submitButton);
 
@@ -126,7 +126,7 @@ describe('Login Component', () => {
   });
 
   it('登录中应该显示加载状态', async () => {
-    mockApi.login.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
+    api.login.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
 
     render(
       <BrowserRouter>
@@ -134,11 +134,11 @@ describe('Login Component', () => {
       </BrowserRouter>
     );
 
-    const studentIdInput = screen.getByPlaceholderText('学号：');
+    const usernameInput = screen.getByPlaceholderText('用户名：');
     const passwordInput = screen.getByPlaceholderText('密码：');
     const submitButton = screen.getByRole('button', { name: '登入' });
 
-    fireEvent.change(studentIdInput, { target: { value: '2021001' } });
+    fireEvent.change(usernameInput, { target: { value: 'testuser' } });
     fireEvent.change(passwordInput, { target: { value: '123456' } });
     fireEvent.click(submitButton);
 

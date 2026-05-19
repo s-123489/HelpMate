@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getUser, logout } from '../../utils/auth';
 import './UserCenter.css';
 
 const UserCenter = () => {
@@ -9,16 +10,14 @@ const UserCenter = () => {
   const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
-    // 模拟获取用户信息
-    setTimeout(() => {
-      setUserInfo({
-        id: 1,
-        name: '李明',
-        phone: '136****1234',
-        avatar: 'https://via.placeholder.com/100',
-        rating: 4.9
-      });
-    }, 500);
+    const currentUser = getUser();
+    setUserInfo({
+      id: currentUser?.id ?? null,
+      name: currentUser?.username || '未登录用户',
+      phone: currentUser?.phone || '未绑定手机号',
+      avatar: 'https://via.placeholder.com/100',
+      rating: currentUser?.rating ?? 5.0,
+    });
   }, []);
 
   useEffect(() => {
@@ -55,8 +54,7 @@ const UserCenter = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    logout();
     navigate('/login');
   };
 
