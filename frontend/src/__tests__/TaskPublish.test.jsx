@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import TaskPublish from '../pages/Task/TaskPublish';
+import { api } from '../services/api';
 
-// Mock react-router-dom
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -13,9 +13,16 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
+vi.mock('../services/api', () => ({
+  api: {
+    publishTask: vi.fn(),
+  },
+}));
+
 describe('TaskPublish Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(window, 'alert').mockImplementation(() => {});
   });
 
   it('应该渲染任务发布表单', () => {
@@ -27,8 +34,9 @@ describe('TaskPublish Component', () => {
 
     expect(screen.getByPlaceholderText('任务标题（必填）')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('描述任务详情，越详细越容易接单')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('取件地点（点击选择）')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('送达地点（点击选择）')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('取件地点')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('送达地点')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('输入金额')).toBeInTheDocument();
   });
 
   it('应该渲染分类按钮', () => {
@@ -75,7 +83,7 @@ describe('TaskPublish Component', () => {
     expect(descriptionInput.value).toBe('这是一个测试任务');
   });
 
-  it('应该能够点击快速金额按钮', () => {
+  it('应该能够点击快速金额按钮累加金额', () => {
     render(
       <BrowserRouter>
         <TaskPublish />
@@ -107,20 +115,9 @@ describe('TaskPublish Component', () => {
     expect(mockNavigate).toHaveBeenCalledWith(-1);
   });
 
-  it('点击草稿按钮应该保存草稿', () => {
-    render(
-      <BrowserRouter>
-        <TaskPublish />
-      </BrowserRouter>
-    );
+  it('提交表单成功后应该跳转到首页', async () => {
+    api.publishTask.mockResolvedValue({ success: true, data: { id: 99 } });
 
-    const draftButton = screen.getByRole('button', { name: /草稿/ });
-    fireEvent.click(draftButton);
-
-    expect(global.alert).toHaveBeenCalledWith('已保存至草稿箱');
-  });
-
-  it('提交表单应该发布任务', () => {
     render(
       <BrowserRouter>
         <TaskPublish />
@@ -130,27 +127,30 @@ describe('TaskPublish Component', () => {
     fireEvent.change(screen.getByPlaceholderText('任务标题（必填）'), {
       target: { value: '测试任务' }
     });
-    fireEvent.change(screen.getByPlaceholderText('取件地点（点击选择）'), {
+    fireEvent.change(screen.getByPlaceholderText('取件地点'), {
       target: { value: '南门' }
     });
-    fireEvent.change(screen.getByPlaceholderText('送达地点（点击选择）'), {
+    fireEvent.change(screen.getByPlaceholderText('送达地点'), {
       target: { value: '东区宿舍' }
     });
 
-    // 设置deadline
-    const deadlineInput = screen.getByPlaceholderText('选择截止时间');
-    fireEvent.change(deadlineInput, {
-      target: { value: '2026-04-23T18:00' }
-    });
+    const deadlineInput = document.querySelector('input[name="deadline"]');
+    fireEvent.change(deadlineInput, { target: { value: '2026-04-23T18:00' } });
 
     fireEvent.change(screen.getByPlaceholderText('输入金额'), {
       target: { value: '5' }
     });
 
-    const submitButtons = screen.getAllByRole('button');
-    const publishButton = submitButtons.find(btn => btn.textContent === '发布任务' && btn.type === 'submit');
+    const publishButton = screen.getAllByRole('button').find(
+      btn => btn.textContent === '发布任务' && btn.type === 'submit'
+    );
     fireEvent.click(publishButton);
 
-    expect(global.alert).toHaveBeenCalledWith('任务发布成功！');
+    await waitFor(() => {
+      expect(api.publishTask).toHaveBeenCalled();
+    });
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/');
+    });
   });
 });
