@@ -3,34 +3,27 @@ package com.helpmate.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.helpmate.dto.CreateTaskRequest;
-import com.helpmate.entity.OrderInfo;
 import com.helpmate.entity.Task;
-import com.helpmate.entity.User;
 import com.helpmate.mapper.OrderInfoMapper;
 import com.helpmate.mapper.TaskMapper;
-import com.helpmate.mapper.UserMapper;
+import com.helpmate.service.NotificationService;
 import com.helpmate.service.TaskService;
-import com.helpmate.vo.TaskDetailVO;
+import com.helpmate.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
-
 @Service
 public class TaskServiceImpl implements TaskService {
 
-    @Autowired
-    private TaskMapper taskMapper;
-
-    @Autowired
-    private OrderInfoMapper orderInfoMapper;
-
-    @Autowired
-    private UserMapper userMapper;
+    @Autowired private TaskMapper taskMapper;
+    @Autowired private WalletService walletService;
+    @Autowired private OrderInfoMapper orderInfoMapper;
+    @Autowired private NotificationService notificationService;
 
     @Override
+    @Transactional
     public Long createTask(CreateTaskRequest request, Long publisherId) {
         Task task = new Task();
         task.setPublisherId(publisherId);
@@ -42,6 +35,8 @@ public class TaskServiceImpl implements TaskService {
         task.setLocation(request.getLocation());
         task.setDeadline(request.getDeadline());
         taskMapper.insert(task);
+
+        walletService.freezeReward(publisherId, request.getReward(), task.getId());
         return task.getId();
     }
 
@@ -56,86 +51,24 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public TaskDetailVO getTaskDetail(Long taskId) {
+    public Task getTaskById(Long taskId) {
         Task task = taskMapper.selectById(taskId);
-        if (task == null) {
-            throw new RuntimeException("任务不存在");
-        }
-        TaskDetailVO vo = TaskDetailVO.from(task);
-
-        // 发布者信息
-        User publisher = userMapper.selectById(task.getPublisherId());
-        if (publisher != null) {
-            vo.setPublisherName(publisher.getUsername());
-            vo.setPublisherPhone(publisher.getPhone());
-            vo.setPublisherAvatar(publisher.getAvatarUrl());
-        }
-
-        // 接单者信息（若已被接取）
-        OrderInfo order = orderInfoMapper.selectOne(
-                new LambdaQueryWrapper<OrderInfo>().eq(OrderInfo::getTaskId, taskId));
-        if (order != null) {
-            vo.setAccepterId(order.getHelperId());
-            User accepter = userMapper.selectById(order.getHelperId());
-            if (accepter != null) {
-                vo.setAccepterName(accepter.getUsername());
-                vo.setAccepterPhone(accepter.getPhone());
-            }
-        }
-        return vo;
+        if (task == null) throw new RuntimeException("任务不存在");
+        return task;
     }
 
     @Override
     @Transactional
-    public void acceptTask(Long taskId, Long helperId) {
+    public void cancelTask(Long taskId, Long userId) {
         Task task = taskMapper.selectById(taskId);
-        if (task == null) {
-            throw new RuntimeException("任务不存在");
-        }
-        if (task.getStatus() != 0) {
-            throw new RuntimeException("任务已被接取或已结束");
-        }
-        if (task.getPublisherId().equals(helperId)) {
-            throw new RuntimeException("不能接取自己发布的任务");
-        }
+        if (task == null) throw new RuntimeException("任务不存在");
+        if (!task.getPublisherId().equals(userId)) throw new RuntimeException("只有发布者才能取消任务");
+        if (task.getStatus() != 0) throw new RuntimeException("只有待接单的任务才能取消");
 
-        OrderInfo existing = orderInfoMapper.selectOne(
-                new LambdaQueryWrapper<OrderInfo>().eq(OrderInfo::getTaskId, taskId));
-        if (existing != null) {
-            throw new RuntimeException("任务已被接取");
-        }
-
-        OrderInfo order = new OrderInfo();
-        order.setTaskId(taskId);
-        order.setHelperId(helperId);
-        order.setStatus(0);
-        orderInfoMapper.insert(order);
-
-        task.setStatus(1);
+        task.setStatus(3);
         taskMapper.updateById(task);
-    }
 
-    @Override
-    @Transactional
-    public void completeTask(Long taskId, Long helperId) {
-        Task task = taskMapper.selectById(taskId);
-        if (task == null) {
-            throw new RuntimeException("任务不存在");
-        }
-        if (task.getStatus() != 1) {
-            throw new RuntimeException("任务当前状态无法完成");
-        }
-        OrderInfo order = orderInfoMapper.selectOne(
-                new LambdaQueryWrapper<OrderInfo>().eq(OrderInfo::getTaskId, taskId));
-        if (order == null || !order.getHelperId().equals(helperId)) {
-            throw new RuntimeException("只有接单人可以完成任务");
-        }
-
-        order.setStatus(1);
-        order.setCompletedAt(LocalDateTime.now());
-        orderInfoMapper.updateById(order);
-
-        task.setStatus(2);
-        taskMapper.updateById(task);
+        walletService.refundReward(userId, task.getReward(), null);
     }
 }
+

@@ -31,8 +31,19 @@ public class TaskController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String category) {
-        Page<Task> result = taskService.listTasks(page, size, category);
-        return Result.success(result);
+        return Result.success(taskService.listTasks(page, size, category));
+    }
+
+    @GetMapping("/{taskId}")
+    public Result<Task> detail(@PathVariable Long taskId) {
+        return Result.success(taskService.getTaskById(taskId));
+    }
+
+    @PostMapping("/{taskId}/cancel")
+    public Result<Void> cancel(@PathVariable Long taskId, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        taskService.cancelTask(taskId, userId);
+        return Result.success("任务已取消，赏金已退还");
     }
 
     @GetMapping("/{id}")
@@ -54,3 +65,4 @@ public class TaskController {
         return Result.success("已完成", null);
     }
 }
+
