@@ -510,6 +510,86 @@ export const mockApi = {
       success: true,
       data: userTasks
     };
+  },
+
+  // 钱包充值
+  recharge: async (amount, userId) => {
+    await delay();
+    const user = users.find(u => u.id === userId);
+    if (!user) {
+      throw new Error('用户不存在');
+    }
+    user.points += parseFloat(amount);
+    return {
+      success: true,
+      message: '充值成功',
+      data: {
+        balance: user.points
+      }
+    };
+  },
+
+  // 获取用户资料（包含余额和评分）
+  getMyProfile: async (userId) => {
+    await delay(200);
+    const user = users.find(u => u.id === userId);
+    if (!user) {
+      throw new Error('用户不存在');
+    }
+    const userReviews = reviews.filter(r => r.revieweeId === userId);
+    return {
+      success: true,
+      data: {
+        username: user.name,
+        phone: user.phone,
+        balance: user.points,
+        avgScore: user.creditScore,
+        reviewCount: userReviews.length,
+        avatarUrl: null
+      }
+    };
+  },
+
+  // 获取我发布的订单
+  myPublishedOrders: async (userId) => {
+    await delay(200);
+    const userTasks = tasks.filter(t => t.publisherId === userId);
+    const orders = userTasks.map(task => {
+      const accepter = task.accepterId ? users.find(u => u.id === task.accepterId) : null;
+      return {
+        id: task.id,
+        taskId: task.id,
+        taskTitle: task.title,
+        reward: task.reward,
+        status: task.status,
+        helperName: accepter ? accepter.name : null
+      };
+    });
+    return {
+      success: true,
+      data: orders
+    };
+  },
+
+  // 获取我接取的订单
+  myAcceptedOrders: async (userId) => {
+    await delay(200);
+    const userTasks = tasks.filter(t => t.accepterId === userId);
+    const orders = userTasks.map(task => {
+      const publisher = users.find(u => u.id === task.publisherId);
+      return {
+        id: task.id,
+        taskId: task.id,
+        taskTitle: task.title,
+        reward: task.reward,
+        status: task.status,
+        helperName: publisher ? publisher.name : null
+      };
+    });
+    return {
+      success: true,
+      data: orders
+    };
   }
 };
 

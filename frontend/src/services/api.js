@@ -105,7 +105,7 @@ export const api = {
     };
   },
 
-  // 任务详情
+  // 任务详情（develop: 返回裸 Task，不含发布者/接单人信息）
   // GET /api/task/{id}
   getTaskDetail: async (taskId) => {
     const data = await request(`/task/${taskId}`);
@@ -115,17 +115,49 @@ export const api = {
     };
   },
 
-  // 接取任务
-  // POST /api/task/{id}/accept
+  // 接单
+  // POST /api/order/accept  body: { taskId }
+  // 返回 orderId
   acceptTask: async (taskId) => {
-    await request(`/task/${taskId}/accept`, { method: 'POST' });
+    const data = await request('/order/accept', {
+      method: 'POST',
+      body: JSON.stringify({ taskId }),
+    });
+    return { success: true, orderId: data.data };
+  },
+
+  // 完成任务（发布者操作，需传 orderId 不是 taskId）
+  // POST /api/order/{orderId}/complete
+  completeOrder: async (orderId) => {
+    await request(`/order/${orderId}/complete`, { method: 'POST' });
     return { success: true };
   },
 
-  // 完成任务
-  // POST /api/task/{id}/complete
-  completeTask: async (taskId) => {
-    await request(`/task/${taskId}/complete`, { method: 'POST' });
+  // 取消订单
+  // POST /api/order/{orderId}/cancel
+  cancelOrder: async (orderId) => {
+    await request(`/order/${orderId}/cancel`, { method: 'POST' });
+    return { success: true };
+  },
+
+  // 我接的单：返回 [{ id, taskId, status, ... }]
+  // GET /api/order/my-orders
+  myAcceptedOrders: async () => {
+    const data = await request('/order/my-orders');
+    return { success: true, data: data.data || [] };
+  },
+
+  // 我发布的任务对应的订单：返回 [{ id, taskId, helperId, helperName, status, ... }]
+  // GET /api/order/my-published
+  myPublishedOrders: async () => {
+    const data = await request('/order/my-published');
+    return { success: true, data: data.data || [] };
+  },
+
+  // 取消任务（仅发布者，状态=待接单）
+  // POST /api/task/{id}/cancel
+  cancelTask: async (taskId) => {
+    await request(`/task/${taskId}/cancel`, { method: 'POST' });
     return { success: true };
   },
 
@@ -141,6 +173,118 @@ export const api = {
       data: data.data,
     };
   },
+
+  // 我的资料（含余额、评分）
+  // GET /api/review/profile/me
+  getMyProfile: async () => {
+    const data = await request('/review/profile/me');
+    return { success: true, data: data.data };
+  },
+
+  // 他人资料
+  // GET /api/review/profile/{userId}
+  getUserProfile: async (userId) => {
+    const data = await request(`/review/profile/${userId}`);
+    return { success: true, data: data.data };
+  },
+
+  // 某用户收到的评价
+  // GET /api/review/user/{userId}
+  getUserReviews: async (userId) => {
+    const data = await request(`/review/user/${userId}`);
+    return { success: true, data: data.data || [] };
+  },
+
+  // 提交评价
+  // POST /api/review/submit  body: { orderId, score, content }
+  submitReview: async ({ orderId, score, content }) => {
+    await request('/review/submit', {
+      method: 'POST',
+      body: JSON.stringify({ orderId, score, content: content || '' }),
+    });
+    return { success: true };
+  },
+
+  // 钱包余额
+  // GET /api/wallet/balance
+  getWalletBalance: async () => {
+    const data = await request('/wallet/balance');
+    return { success: true, data: data.data };
+  },
+
+  // 消息列表（最近 50 条）
+  // GET /api/notification/list
+  getNotifications: async () => {
+    const data = await request('/notification/list');
+    return { success: true, data: data.data || [] };
+  },
+
+  // 标记单条已读
+  markNotificationRead: async (id) => {
+    await request(`/notification/${id}/read`, { method: 'POST' });
+    return { success: true };
+  },
+
+  // 全部已读
+  markAllNotificationsRead: async () => {
+    await request('/notification/read-all', { method: 'POST' });
+    return { success: true };
+  },
+
+  // 充值功能
+  // POST /api/wallet/recharge
+  recharge: async ({ amount }) => {
+    const data = await request('/wallet/recharge', {
+      method: 'POST',
+      body: JSON.stringify({ amount }),
+    });
+    return { success: true, data: data.data };
+  },
+};
+
+// 订阅 SSE 实时通知。注意：EventSource 不支持自定义 header，
+// 通过 query 把 token 传给后端是常见做法；但 develop 后端要求 Authorization header，
+// 因此用 fetch + ReadableStream 自行实现兼容方案。
+export const subscribeNotifications = (onMessage, onError) => {
+  const token = localStorage.getItem('helpmate_token');
+  const controller = new AbortController();
+
+  fetch('/api/notification/subscribe', {
+    method: 'GET',
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Accept': 'text/event-stream',
+    },
+    signal: controller.signal,
+  }).then(async (response) => {
+    if (!response.ok || !response.body) {
+      throw new Error(`SSE failed: ${response.status}`);
+    }
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    // 标准 SSE 帧格式：data: ...\n\n
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const frames = buffer.split('\n\n');
+      buffer = frames.pop() || '';
+      for (const frame of frames) {
+        const line = frame.split('\n').find(l => l.startsWith('data:'));
+        if (!line) continue;
+        const payload = line.slice(5).trim();
+        if (!payload || payload === 'connected') continue;
+        try { onMessage(JSON.parse(payload)); }
+        catch { onMessage(payload); }
+      }
+    }
+  }).catch((err) => {
+    if (err.name !== 'AbortError' && onError) onError(err);
+  });
+
+  return () => controller.abort();
 };
 
 export default api;

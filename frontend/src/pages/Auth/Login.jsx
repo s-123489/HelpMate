@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
-import { api } from '../../services/api';
+import { apiAdapter } from '../../services/apiAdapter';
 import { setToken, setUser } from '../../utils/auth';
 
 const Login = () => {
@@ -27,7 +27,7 @@ const Login = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await api.login(formData.username, formData.password);
+      const response = await apiAdapter.login(formData.username, formData.password);
       if (response.success) {
         setToken(response.data.token);
         setUser(response.data.user);
