@@ -9,9 +9,7 @@ export const setToken = (token) => {
 };
 
 // 获取 token
-export const getToken = () => {
-  return localStorage.getItem(TOKEN_KEY);
-};
+export const getToken = () => localStorage.getItem('helpmate_token');
 
 // 移除 token
 export const removeToken = () => {
