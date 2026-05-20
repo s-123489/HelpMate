@@ -42,22 +42,17 @@ const UserCenter = () => {
         ]);
         if (!mounted) return;
 
-        console.log('我发布的订单:', pub.data);
-        console.log('我接取的订单:', acc.data);
-
         // 为每个订单获取任务的真实状态
         const enrichOrdersWithTaskStatus = async (orders) => {
           const enriched = await Promise.all(
             orders.map(async (order) => {
               try {
                 const taskRes = await api.getTaskDetail(order.taskId);
-                console.log('任务详情数据:', taskRes);
                 return {
                   ...order,
                   taskStatus: taskRes.data?.status
                 };
               } catch (e) {
-                console.log('获取任务详情失败:', e);
                 return order;
               }
             })
@@ -67,9 +62,6 @@ const UserCenter = () => {
 
         const enrichedPub = await enrichOrdersWithTaskStatus(pub.data || []);
         const enrichedAcc = await enrichOrdersWithTaskStatus(acc.data || []);
-
-        console.log('处理后的发布订单:', enrichedPub);
-        console.log('处理后的接取订单:', enrichedAcc);
 
         const fallback = getUser();
         setProfile(prof.data || {
@@ -104,16 +96,13 @@ const UserCenter = () => {
       return;
     }
     try {
-      console.log('充值请求:', { amount: parseFloat(rechargeAmount) });
       const result = await api.recharge({ amount: parseFloat(rechargeAmount) });
-      console.log('充值结果:', result);
       alert('充值成功！');
       setShowRechargeModal(false);
       setRechargeAmount('');
       const prof = await api.getMyProfile().catch(() => ({ data: null }));
       setProfile(prof.data || profile);
     } catch (error) {
-      console.error('充值失败:', error);
       alert('充值失败：' + (error.message || '未知错误'));
     }
   };
@@ -181,10 +170,8 @@ const UserCenter = () => {
           </div>
         ) : (
           currentList.map((order) => {
-            console.log('订单数据:', order);
             const displayStatus = order.taskStatus !== undefined ? order.taskStatus : order.status;
             const meta = getStatusMeta(displayStatus);
-            console.log('显示状态:', displayStatus, '映射结果:', meta);
             return (
               <div key={order.id} className="task-item">
                 <div className="task-header">
@@ -226,32 +213,13 @@ const UserCenter = () => {
                 className="recharge-input"
               />
               <div className="quick-amounts">
-                <button
-                  className="quick-btn"
-                  onClick={() => setRechargeAmount('10')}
-                >
-                  10元
-                </button>
-                <button
-                  className="quick-btn"
-                  onClick={() => setRechargeAmount('50')}
-                >
-                  50元
-                </button>
-                <button
-                  className="quick-btn"
-                  onClick={() => setRechargeAmount('100')}
-                >
-                  100元
-                </button>
+                <button className="quick-btn" onClick={() => setRechargeAmount('10')}>10元</button>
+                <button className="quick-btn" onClick={() => setRechargeAmount('50')}>50元</button>
+                <button className="quick-btn" onClick={() => setRechargeAmount('100')}>100元</button>
               </div>
               <div className="modal-actions">
-                <button className="cancel-btn" onClick={() => setShowRechargeModal(false)}>
-                  取消
-                </button>
-                <button className="confirm-btn" onClick={handleRecharge}>
-                  确认充值
-                </button>
+                <button className="cancel-btn" onClick={() => setShowRechargeModal(false)}>取消</button>
+                <button className="confirm-btn" onClick={handleRecharge}>确认充值</button>
               </div>
             </div>
           </div>
