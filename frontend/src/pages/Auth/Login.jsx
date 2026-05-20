@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
-import { apiAdapter } from '../../services/apiAdapter';
+import { api } from '../../services/api';
 import { setToken, setUser } from '../../utils/auth';
 
 const Login = () => {
@@ -27,13 +27,16 @@ const Login = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await apiAdapter.login(formData.username, formData.password);
+      console.log('登录请求:', { username: formData.username, password: formData.password });
+      const response = await api.login(formData.username, formData.password);
+      console.log('登录响应:', response);
       if (response.success) {
         setToken(response.data.token);
         setUser(response.data.user);
         navigate('/');
       }
     } catch (err) {
+      console.error('登录失败:', err);
       setError(err.message || '登录失败，请重试');
     } finally {
       setLoading(false);
