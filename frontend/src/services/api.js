@@ -39,8 +39,8 @@ export const api = {
       body: JSON.stringify({
         username: userData.username,
         password: userData.password,
-        email: userData.email || '',
-        phone: userData.phone || '',
+        email: userData.email || null,
+        phone: userData.phone || null,
       }),
     });
     return { success: true, message: '注册成功' };
@@ -86,6 +86,11 @@ export const api = {
   // 发布任务
   // POST /api/task/create
   publishTask: async (taskData) => {
+    // 后端只有 location 字段，将 pickupLocation → deliveryLocation 合并后发送
+    const location = taskData.pickupLocation && taskData.deliveryLocation
+      ? `${taskData.pickupLocation} → ${taskData.deliveryLocation}`
+      : taskData.pickupLocation || taskData.deliveryLocation || taskData.location || '';
+
     const data = await request('/task/create', {
       method: 'POST',
       body: JSON.stringify({
@@ -93,8 +98,7 @@ export const api = {
         category: taskData.category,
         description: taskData.description,
         reward: taskData.reward,
-        pickupLocation: taskData.pickupLocation,
-        deliveryLocation: taskData.deliveryLocation,
+        location,
         deadline: taskData.deadline,
       }),
     });
@@ -154,6 +158,13 @@ export const api = {
     return { success: true, data: data.data || [] };
   },
 
+  // 我发布的所有任务（含待接单，直接查任务表）
+  // GET /api/task/my-tasks
+  getMyPublishedTasks: async () => {
+    const data = await request('/task/my-tasks');
+    return { success: true, data: data.data || [] };
+  },
+
   // 取消任务（仅发布者，状态=待接单）
   // POST /api/task/{id}/cancel
   cancelTask: async (taskId) => {
@@ -203,6 +214,30 @@ export const api = {
       body: JSON.stringify({ orderId, score, content: content || '' }),
     });
     return { success: true };
+  },
+
+  // 发送消息
+  // POST /api/message/send  body: { receiverId, taskId?, content }
+  sendMessage: async ({ receiverId, taskId, content }) => {
+    const data = await request('/message/send', {
+      method: 'POST',
+      body: JSON.stringify({ receiverId, taskId: taskId || null, content }),
+    });
+    return { success: true, data: data.data };
+  },
+ 
+  // 获取与某人的聊天记录（同时标记已读）
+  // GET /api/message/conversation/{otherId}
+  getConversation: async (otherId) => {
+    const data = await request(`/message/conversation/${otherId}`);
+    return { success: true, data: data.data || [] };
+  },
+ 
+  // 获取我的会话列表
+  // GET /api/message/conversations
+  getConversations: async () => {
+    const data = await request('/message/conversations');
+    return { success: true, data: data.data || [] };
   },
 
   // 钱包余额

@@ -5,13 +5,18 @@ import { api } from '../../services/api';
 import { getUser } from '../../utils/auth';
 import ReviewModal from '../../components/Review/ReviewModal';
 
+const getInitial = (name) => {
+  if (!name) return '?';
+  return name.charAt(0).toUpperCase();
+};
+
 const TaskDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [task, setTask] = useState(null);
-  const [publisher, setPublisher] = useState(null); // 发布者 profile（含评分）
-  const [myOrder, setMyOrder] = useState(null);      // 我作为接单人
-  const [publishedOrder, setPublishedOrder] = useState(null); // 我作为发布者
+  const [publisher, setPublisher] = useState(null);
+  const [myOrder, setMyOrder] = useState(null);
+  const [publishedOrder, setPublishedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [reviewing, setReviewing] = useState(false);
@@ -24,7 +29,6 @@ const TaskDetail = () => {
       const t = taskRes.data;
       setTask(t);
 
-      // 并行：发布者资料、我接的单、我发布的订单
       const tasks = [
         api.getUserProfile(t.publisherId).catch(() => ({ data: null })),
       ];
@@ -92,151 +96,223 @@ const TaskDetail = () => {
     }
   };
 
+  const handleContactPublisher = () => {
+    navigate(`/chat/${task.publisherId}`, {
+      state: { username: publisherName, taskId: task.id, taskTitle: task.title }
+    });
+  };
+
+  const handleContactAccepter = () => {
+    navigate(`/chat/${publishedOrder.helperId}`, {
+      state: { username: publishedOrder.helperName || '接单人', taskId: task.id, taskTitle: task.title }
+    });
+  };
+
   if (loading) return <div className="loading">加载中...</div>;
   if (!task) return <div className="error">任务不存在</div>;
 
-  const statusTextMap = { 0: '待接取', 1: '进行中', 2: '已完成', 3: '已取消' };
+  const statusTextMap  = { 0: '待接取', 1: '进行中', 2: '已完成', 3: '已取消' };
   const statusClassMap = { 0: 'pending', 1: 'in-progress', 2: 'completed', 3: 'cancelled' };
 
   const isPublisher = currentUser && currentUser.id === task.publisherId;
-  const isAccepter = myOrder != null;
-  // 仅接单人在订单完成后可评价发布者；评价是否做过这里无法直接判断，简单允许"重试"由后端拦
-  const canReview = isAccepter && myOrder.status === 1;
+  const isAccepter  = myOrder != null;
+  const canAccepterReview  = isAccepter && task.status === 2;
+  const canPublisherReview = isPublisher && task.status === 2 && publishedOrder != null;
 
-  let pickup = task.location;
+  // 拆分 location → pickup / delivery
+  let pickup = task.location || '-';
   let delivery = '';
   if (task.location && task.location.includes('→')) {
     const parts = task.location.split('→');
-    pickup = parts[0].trim();
+    pickup   = parts[0].trim();
     delivery = parts.slice(1).join('→').trim();
   }
+
+  const publisherName = publisher?.username || `用户 #${task.publisherId}`;
 
   return (
     <div className="task-detail-container">
       <header className="detail-header">
         <button className="back-btn" onClick={() => navigate(-1)}>
-          ← 任务详情
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          返回
         </button>
       </header>
 
-      <div className="time-status-section">
-        <span className={`status-badge ${statusClassMap[task.status] || 'pending'}`}>
-          {statusTextMap[task.status] || '未知'}
-        </span>
-        <div className="time-info">
-          <div className="time-row">
-            <span className="time-label">发布时间：</span>
-            <span className="time-value">
-              {task.createdAt ? String(task.createdAt).replace('T', ' ').slice(0, 16) : '-'}
-            </span>
-          </div>
-          <div className="time-row">
-            <span className="time-label">截止时间：</span>
-            <span className="time-value">{task.deadline || '-'}</span>
-          </div>
-        </div>
-      </div>
+      <div className="detail-content">
 
-      <div className="task-info-card">
-        <div className="info-item">
-          <div className="info-label"><span className="icon">📋</span><span>任务名：</span></div>
-          <div className="info-content">{task.title}</div>
+        {/* 状态 + 时间 */}
+        <div className="time-status-section">
+          <span className={`status-badge ${statusClassMap[task.status] || 'pending'}`}>
+            {statusTextMap[task.status] || '未知'}
+          </span>
+          <div className="time-info">
+            <div className="time-row">
+              <span className="time-label">发布时间</span>
+              <span className="time-value">
+                {task.createdAt ? String(task.createdAt).replace('T', ' ').slice(0, 16) : '-'}
+              </span>
+            </div>
+            <div className="time-row">
+              <span className="time-label">截止时间</span>
+              <span className="time-value">{task.deadline || '-'}</span>
+            </div>
+          </div>
         </div>
-        <div className="info-item">
-          <div className="info-label"><span className="icon">📝</span><span>任务描述：</span></div>
-          <div className="info-content description">{task.description || '无'}</div>
+
+        {/* 任务信息 */}
+        <div className="task-info-card">
+          <h2 className="task-main-title">{task.title}</h2>
+          <p className="task-main-desc">{task.description || '暂无描述'}</p>
+
+          {/* 位置 */}
+          <div className="location-block">
+            <div className="location-row">
+              <div className="location-icon-wrap pickup">📍</div>
+              <div className="location-texts">
+                <small>取件地点</small>
+                <span>{pickup}</span>
+              </div>
+            </div>
+            {delivery && (
+              <>
+                <div className="location-connector" />
+                <div className="location-row" style={{ marginTop: 10 }}>
+                  <div className="location-icon-wrap delivery">🚚</div>
+                  <div className="location-texts">
+                    <small>送达地点</small>
+                    <span>{delivery}</span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* 截止 + 分类 */}
+          <div className="meta-grid">
+            <div className="meta-item">
+              <small>截止时间</small>
+              <span>{task.deadline || '-'}</span>
+            </div>
+            <div className="meta-item">
+              <small>任务分类</small>
+              <span>{task.category || '-'}</span>
+            </div>
+          </div>
         </div>
-        <div className="info-item">
-          <div className="info-label"><span className="icon">📍</span><span>取件地点：</span></div>
-          <div className="info-content">{pickup || '-'}</div>
+
+        {/* 发布者 */}
+        <div className="publisher-section">
+          <div className="section-header">
+            <span>👤</span> 发布者
+          </div>
+          <div className="publisher-card">
+            <div className="publisher-avatar">
+              {getInitial(publisherName)}
+            </div>
+            <div className="publisher-info">
+              <div className="publisher-name">{publisherName}</div>
+              <div className="publisher-rating">
+                ★ {publisher?.avgScore != null
+                  ? Number(publisher.avgScore).toFixed(1)
+                  : '暂无评分'}
+                {publisher?.reviewCount > 0 && (
+                  <span className="review-count">（{publisher.reviewCount} 条评价）</span>
+                )}
+              </div>
+            </div>
+            {/* 接单人可联系发布者 */}
+            {isAccepter && (task.status === 1 || task.status === 2) && (
+              <button className="contact-btn" onClick={handleContactPublisher}>
+                联系
+              </button>
+            )}
+          </div>
         </div>
-        {delivery && (
-          <div className="info-item">
-            <div className="info-label"><span className="icon">🚚</span><span>送达地点：</span></div>
-            <div className="info-content">{delivery}</div>
+
+        {/* 赏金 */}
+        <div className="reward-display">
+          <div className="reward-left">
+            <small>赏金</small>
+            <div className="reward-badge">
+              <span className="reward-symbol">¥</span>
+              <span className="reward-amount">{task.reward}</span>
+            </div>
+          </div>
+          <span className={`status-badge ${statusClassMap[task.status] || 'pending'}`}>
+            {statusTextMap[task.status] || '未知'}
+          </span>
+        </div>
+
+        {/* 操作按钮 */}
+        {task.status === 0 && !isPublisher && (
+          <div className="action-section">
+            <button className="accept-btn" onClick={handleAcceptTask} disabled={submitting}>
+              {submitting ? '处理中...' : '接取任务'}
+            </button>
+          </div>
+        )}
+
+        {task.status === 0 && isPublisher && (
+          <div className="action-section">
+            <button className="accept-btn cancel-btn" onClick={handleCancelTask} disabled={submitting}>
+              {submitting ? '处理中...' : '取消任务（退还赏金）'}
+            </button>
+          </div>
+        )}
+
+        {task.status === 1 && isPublisher && publishedOrder && (
+          <div className="action-section">
+            <button className="accept-btn" onClick={handleCompleteTask} disabled={submitting}>
+              {submitting ? '处理中...' : '确认完成（发放赏金）'}
+            </button>
+            <button className="contact-chat-btn" onClick={handleContactAccepter}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              联系接单人
+            </button>
+          </div>
+        )}
+
+        {task.status === 1 && isAccepter && (
+          <div className="action-section">
+            <button className="accept-btn" disabled>等待发布者确认完成</button>
+          </div>
+        )}
+
+        {/* 接单人评价发布者 */}
+        {canAccepterReview && (
+          <div className="action-section">
+            <button className="accept-btn" onClick={() => setReviewing('accepter')}>
+              评价发布者
+            </button>
+          </div>
+        )}
+
+        {/* 发布者评价接单人 */}
+        {canPublisherReview && (
+          <div className="action-section">
+            <button className="accept-btn" onClick={() => setReviewing('publisher')}>
+              评价接单人
+            </button>
           </div>
         )}
       </div>
 
-      <div className="publisher-section">
-        <div className="section-header">
-          <span className="icon">👤</span>
-          <span className="section-title">发布者：</span>
-        </div>
-        <div className="publisher-card">
-          <img
-            src={publisher?.avatarUrl || 'https://via.placeholder.com/60'}
-            alt={publisher?.username || ''}
-            className="publisher-avatar"
-          />
-          <div className="publisher-info">
-            <div className="publisher-name">
-              {publisher?.username || `用户 #${task.publisherId}`}
-            </div>
-            <div className="publisher-rating">
-              ⭐ {publisher?.avgScore != null ? Number(publisher.avgScore).toFixed(1) : '暂无评分'}
-              {publisher?.reviewCount > 0 && (
-                <span className="review-count">（{publisher.reviewCount} 条评价）</span>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="reward-display">
-        <div className="reward-badge">
-          <span className="reward-symbol">¥</span>
-          <span className="reward-amount">{task.reward}</span>
-        </div>
-        <div className="reward-label">赏金</div>
-      </div>
-
-      {/* 待接取 + 路人 → 接取按钮 */}
-      {task.status === 0 && !isPublisher && (
-        <div className="action-section">
-          <button className="accept-btn" onClick={handleAcceptTask} disabled={submitting}>
-            {submitting ? '处理中...' : '接取任务'}
-          </button>
-        </div>
-      )}
-
-      {/* 待接取 + 发布者 → 取消按钮 */}
-      {task.status === 0 && isPublisher && (
-        <div className="action-section">
-          <button className="accept-btn cancel-btn" onClick={handleCancelTask} disabled={submitting}>
-            {submitting ? '处理中...' : '取消任务（退还赏金）'}
-          </button>
-        </div>
-      )}
-
-      {/* 进行中 + 发布者 → 确认完成 */}
-      {task.status === 1 && isPublisher && publishedOrder && (
-        <div className="action-section">
-          <button className="accept-btn" onClick={handleCompleteTask} disabled={submitting}>
-            {submitting ? '处理中...' : '确认完成（发放赏金）'}
-          </button>
-        </div>
-      )}
-
-      {/* 进行中 + 接单人 → 等待 */}
-      {task.status === 1 && isAccepter && (
-        <div className="action-section">
-          <button className="accept-btn" disabled>等待发布者确认完成</button>
-        </div>
-      )}
-
-      {/* 已完成 + 接单人 → 评价 */}
-      {task.status === 2 && canReview && (
-        <div className="action-section">
-          <button className="accept-btn" onClick={() => setReviewing(true)}>
-            评价发布者
-          </button>
-        </div>
-      )}
-
-      {reviewing && (
+      {reviewing === 'accepter' && (
         <ReviewModal
           orderId={myOrder.id}
+          onClose={() => setReviewing(false)}
+          onSuccess={loadAll}
+        />
+      )}
+
+      {reviewing === 'publisher' && (
+        <ReviewModal
+          orderId={publishedOrder.id}
           onClose={() => setReviewing(false)}
           onSuccess={loadAll}
         />

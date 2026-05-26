@@ -5,20 +5,18 @@ import { getUser, logout } from '../../utils/auth';
 import './UserCenter.css';
 
 const getStatusMeta = (status) => {
-  const statusNum = Number(status);
-  if (statusNum === 0) {
-    return { text: '待接单', color: 'orange' };
-  }
-  if (statusNum === 1) {
-    return { text: '进行中', color: 'blue' };
-  }
-  if (statusNum === 2) {
-    return { text: '已完成', color: 'green' };
-  }
-  if (statusNum === 3) {
-    return { text: '已取消', color: 'gray' };
-  }
+  // 兼容真实API（数字）和Mock（字符串）两种格式
+  const s = String(status);
+  if (s === '0' || s === 'pending')   return { text: '待接单', color: 'orange' };
+  if (s === '1' || s === 'accepted')  return { text: '进行中', color: 'blue' };
+  if (s === '2' || s === 'completed') return { text: '已完成', color: 'green' };
+  if (s === '3' || s === 'cancelled') return { text: '已取消', color: 'gray' };
   return { text: '未知', color: 'gray' };
+};
+
+const getInitial = (name) => {
+  if (!name) return '?';
+  return name.charAt(0).toUpperCase();
 };
 
 const UserCenter = () => {
@@ -30,6 +28,9 @@ const UserCenter = () => {
   const [loading, setLoading] = useState(true);
   const [showRechargeModal, setShowRechargeModal] = useState(false);
   const [rechargeAmount, setRechargeAmount] = useState('');
+  const [showReviewsModal, setShowReviewsModal] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -37,30 +38,35 @@ const UserCenter = () => {
       try {
         const [prof, pub, acc] = await Promise.all([
           api.getMyProfile().catch(() => ({ data: null })),
-          api.myPublishedOrders().catch(() => ({ data: [] })),
+          api.getMyPublishedTasks().catch(() => ({ data: [] })),  // 直接查任务表，含待接单
           api.myAcceptedOrders().catch(() => ({ data: [] })),
         ]);
         if (!mounted) return;
 
-        // 为每个订单获取任务的真实状态
+        // 我发布的：后端已返回 TaskListVO，字段直接可用（id/title/status 等）
+        const pubList = (pub.data || []).map(task => ({
+          id: task.id,
+          taskId: task.id,
+          taskTitle: task.title,
+          reward: task.reward,
+          status: task.status,
+          helperName: null,
+        }));
+
+        // 我接取的：仍需从订单数据补充任务状态
         const enrichOrdersWithTaskStatus = async (orders) => {
           const enriched = await Promise.all(
             orders.map(async (order) => {
               try {
                 const taskRes = await api.getTaskDetail(order.taskId);
-                return {
-                  ...order,
-                  taskStatus: taskRes.data?.status
-                };
-              } catch (e) {
+                return { ...order, taskStatus: taskRes.data?.status };
+              } catch {
                 return order;
               }
             })
           );
           return enriched;
         };
-
-        const enrichedPub = await enrichOrdersWithTaskStatus(pub.data || []);
         const enrichedAcc = await enrichOrdersWithTaskStatus(acc.data || []);
 
         const fallback = getUser();
@@ -70,9 +76,8 @@ const UserCenter = () => {
           balance: 0,
           avgScore: null,
           reviewCount: 0,
-          avatarUrl: null,
         });
-        setPublishedOrders(enrichedPub);
+        setPublishedOrders(pubList);
         setAcceptedOrders(enrichedAcc);
       } finally {
         if (mounted) setLoading(false);
@@ -88,7 +93,19 @@ const UserCenter = () => {
 
   const handleViewDetails = (taskId) => navigate(`/task/${taskId}`);
 
-  const handleGoHome = () => navigate('/');
+  const handleOpenReviews = async () => {
+    setShowReviewsModal(true);
+    setReviewsLoading(true);
+    try {
+      const currentUser = getUser();
+      const res = await api.getUserReviews(currentUser?.id || profile?.id);
+      setReviews(res.data || []);
+    } catch {
+      setReviews([]);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
 
   const handleRecharge = async () => {
     if (!rechargeAmount || parseFloat(rechargeAmount) <= 0) {
@@ -96,7 +113,7 @@ const UserCenter = () => {
       return;
     }
     try {
-      const result = await api.recharge({ amount: parseFloat(rechargeAmount) });
+      await api.recharge({ amount: parseFloat(rechargeAmount) });
       alert('充值成功！');
       setShowRechargeModal(false);
       setRechargeAmount('');
@@ -107,65 +124,88 @@ const UserCenter = () => {
     }
   };
 
-  if (loading) return <div className="loading">加载中...</div>;
+  const maskPhone = (phone) => {
+    if (!phone || phone === '未绑定') return phone;
+    return phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+  };
+
+  if (loading) return <div className="uc-loading">加载中...</div>;
 
   const currentList = activeTab === 'published' ? publishedOrders : acceptedOrders;
+  const rating = profile?.avgScore != null ? Number(profile.avgScore).toFixed(1) : '5.0';
+  const ratingNum = parseFloat(rating);
 
   return (
-    <div className="user-center-container">
-      <button className="go-home-btn" onClick={handleGoHome}>
-        ← 返回主页
+    <div className="uc-container">
+      {/* Back Button */}
+      <button className="uc-back-btn" onClick={() => navigate('/')}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        返回主页
       </button>
 
-      <div className="user-profile-card">
-        <div className="profile-content">
-          <img
-            src={profile?.avatarUrl || 'https://via.placeholder.com/100'}
-            alt={profile?.username}
-            className="avatar"
-          />
-          <div className="profile-info">
-            <h2 className="user-name">{profile?.username}</h2>
-            <p className="user-phone">{profile?.phone || '未绑定手机号'}</p>
-            <div className="user-rating">
-              <span className="star-icon">★</span>
-              <span className="rating-value">
-                {profile?.avgScore != null ? Number(profile.avgScore).toFixed(1) : '5.0'}
-              </span>
-              {profile?.reviewCount > 0 && (
-                <span className="review-count">（{profile.reviewCount} 条评价）</span>
-              )}
+      {/* Profile Card */}
+      <div className="uc-profile-card">
+        {/* Avatar + Info */}
+        <div className="uc-profile-top">
+          <div className="uc-avatar">
+            {getInitial(profile?.username)}
+          </div>
+          <div className="uc-profile-info">
+            <h2 className="uc-name">{profile?.username}</h2>
+            <p className="uc-phone">{maskPhone(profile?.phone) || '未绑定手机号'}</p>
+            <div className="uc-stars" onClick={handleOpenReviews} style={{ cursor: 'pointer' }}>
+              {[1, 2, 3, 4, 5].map((s) => (
+                <span key={s} className={`uc-star ${s <= Math.round(ratingNum) ? 'filled' : ''}`}>★</span>
+              ))}
+              <span className="uc-rating-val">{rating}</span>
+              <span className="uc-rating-hint">查看评价 ›</span>
             </div>
-            <div className="user-balance-row">
-              <span className="user-balance">
-                💰 钱包余额：¥{profile?.balance != null ? Number(profile.balance).toFixed(2) : '0.00'}
-              </span>
-              <button className="recharge-btn" onClick={() => setShowRechargeModal(true)}>
-                充值
-              </button>
-            </div>
+          </div>
+        </div>
+
+        {/* Stats Row */}
+        <div className="uc-stats-row">
+          <button className="uc-stat-item" onClick={() => setShowRechargeModal(true)}>
+            <span className="uc-stat-value">
+              ¥{profile?.balance != null ? Number(profile.balance).toFixed(2) : '0.00'}
+            </span>
+            <span className="uc-stat-label">钱包余额</span>
+          </button>
+          <div className="uc-stat-divider" />
+          <div className="uc-stat-item">
+            <span className="uc-stat-value">{publishedOrders.length}</span>
+            <span className="uc-stat-label">发布任务</span>
+          </div>
+          <div className="uc-stat-divider" />
+          <div className="uc-stat-item">
+            <span className="uc-stat-value">{acceptedOrders.length}</span>
+            <span className="uc-stat-label">接取任务</span>
           </div>
         </div>
       </div>
 
-      <div className="tabs-section">
+      {/* Tabs */}
+      <div className="uc-tabs">
         <button
-          className={`tab-btn ${activeTab === 'published' ? 'active' : ''}`}
+          className={`uc-tab ${activeTab === 'published' ? 'active' : ''}`}
           onClick={() => setActiveTab('published')}
         >
           我发布的（{publishedOrders.length}）
         </button>
         <button
-          className={`tab-btn ${activeTab === 'accepted' ? 'active' : ''}`}
+          className={`uc-tab ${activeTab === 'accepted' ? 'active' : ''}`}
           onClick={() => setActiveTab('accepted')}
         >
           我接取的（{acceptedOrders.length}）
         </button>
       </div>
 
-      <div className="tasks-section">
+      {/* Task List */}
+      <div className="uc-task-list">
         {currentList.length === 0 ? (
-          <div className="empty-state">
+          <div className="uc-empty">
             {activeTab === 'published' ? '还没有发布过任务' : '还没有接取过任务'}
           </div>
         ) : (
@@ -173,36 +213,77 @@ const UserCenter = () => {
             const displayStatus = order.taskStatus !== undefined ? order.taskStatus : order.status;
             const meta = getStatusMeta(displayStatus);
             return (
-              <div key={order.id} className="task-item">
-                <div className="task-header">
-                  <h3 className="task-title">{order.taskTitle || `任务 #${order.taskId}`}</h3>
-                  <span className={`status-badge ${meta.color}`}>{meta.text}</span>
+              <div key={order.id} className="uc-task-item">
+                <div className="uc-task-header">
+                  <h3 className="uc-task-title">{order.taskTitle || `任务 #${order.taskId}`}</h3>
+                  <span className={`uc-badge ${meta.color}`}>{meta.text}</span>
                 </div>
-                <div className="task-reward">赏金：¥{order.reward}</div>
+                <p className="uc-task-reward">赏金：¥{Number(order.reward).toFixed(2)}</p>
                 {activeTab === 'published' && order.helperName && (
-                  <div className="task-accepter">接单人：{order.helperName}</div>
+                  <p className="uc-task-accepter">接单人：{order.helperName}</p>
                 )}
-                <div className="task-actions">
-                  <button className="detail-btn" onClick={() => handleViewDetails(order.taskId)}>
-                    查看详情
-                  </button>
-                </div>
+                <button
+                  className="uc-detail-btn"
+                  onClick={() => handleViewDetails(order.taskId)}
+                >
+                  查看详情
+                </button>
               </div>
             );
           })
         )}
       </div>
 
-      <button className="logout-btn" onClick={handleLogout}>
+      {/* Logout */}
+      <button className="uc-logout-btn" onClick={handleLogout}>
         退出登录
       </button>
 
+      {/* Reviews Modal */}
+      {showReviewsModal && (
+        <div className="uc-modal-overlay" onClick={() => setShowReviewsModal(false)}>
+          <div className="uc-modal uc-reviews-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="uc-modal-title">我收到的评价</h3>
+            {reviewsLoading ? (
+              <div className="uc-reviews-loading">加载中...</div>
+            ) : reviews.length === 0 ? (
+              <div className="uc-reviews-empty">暂无评价</div>
+            ) : (
+              <div className="uc-reviews-list">
+                {reviews.map((r, i) => (
+                  <div key={r.id || i} className="uc-review-item">
+                    <div className="uc-review-header">
+                      <div className="uc-review-stars">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <span key={s} className={`uc-review-star ${s <= r.score ? 'filled' : ''}`}>★</span>
+                        ))}
+                      </div>
+                      <span className="uc-review-date">
+                        {r.createdAt ? String(r.createdAt).replace('T', ' ').slice(0, 16) : ''}
+                      </span>
+                    </div>
+                    {r.content && <p className="uc-review-content">{r.content}</p>}
+                    {r.reviewerName && (
+                      <p className="uc-review-author">— {r.reviewerName}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            <button className="uc-cancel-btn" style={{ marginTop: 16, width: '100%' }} onClick={() => setShowReviewsModal(false)}>
+              关闭
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Recharge Modal */}
       {showRechargeModal && (
-        <div className="modal-overlay" onClick={() => setShowRechargeModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>充值</h3>
-            <div className="recharge-form">
-              <label>充值金额：</label>
+        <div className="uc-modal-overlay" onClick={() => setShowRechargeModal(false)}>
+          <div className="uc-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="uc-modal-title">充值</h3>
+            <div className="uc-modal-body">
+              <label className="uc-modal-label">充值金额</label>
               <input
                 type="number"
                 min="0.01"
@@ -210,16 +291,18 @@ const UserCenter = () => {
                 value={rechargeAmount}
                 onChange={(e) => setRechargeAmount(e.target.value)}
                 placeholder="请输入充值金额"
-                className="recharge-input"
+                className="uc-recharge-input"
               />
-              <div className="quick-amounts">
-                <button className="quick-btn" onClick={() => setRechargeAmount('10')}>10元</button>
-                <button className="quick-btn" onClick={() => setRechargeAmount('50')}>50元</button>
-                <button className="quick-btn" onClick={() => setRechargeAmount('100')}>100元</button>
+              <div className="uc-quick-amounts">
+                {['10', '50', '100'].map((amt) => (
+                  <button key={amt} className="uc-quick-btn" onClick={() => setRechargeAmount(amt)}>
+                    {amt}元
+                  </button>
+                ))}
               </div>
-              <div className="modal-actions">
-                <button className="cancel-btn" onClick={() => setShowRechargeModal(false)}>取消</button>
-                <button className="confirm-btn" onClick={handleRecharge}>确认充值</button>
+              <div className="uc-modal-actions">
+                <button className="uc-cancel-btn" onClick={() => setShowRechargeModal(false)}>取消</button>
+                <button className="uc-confirm-btn" onClick={handleRecharge}>确认充值</button>
               </div>
             </div>
           </div>

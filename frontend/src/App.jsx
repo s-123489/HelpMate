@@ -3,6 +3,8 @@ import Home from './pages/Home/Home.jsx'
 import TaskDetail from './pages/Task/TaskDetail.jsx'
 import TaskPublish from './pages/Task/TaskPublish.jsx'
 import OrderMessage from './pages/Order/OrderMessage.jsx'
+import ChatList from './pages/Chat/ChatList.jsx'
+import ChatRoom from './pages/Chat/ChatRoom.jsx'
 import UserCenter from './pages/User/UserCenter.jsx'
 import Login from './pages/Auth/Login.jsx'
 import Register from './pages/Auth/Register.jsx'
@@ -23,6 +25,8 @@ function App() {
         <Route path="/task/:id" element={<RequireAuth><TaskDetail /></RequireAuth>} />
         <Route path="/task/publish" element={<RequireAuth><TaskPublish /></RequireAuth>} />
         <Route path="/order/message" element={<RequireAuth><OrderMessage /></RequireAuth>} />
+        <Route path="/chat" element={<RequireAuth><ChatList /></RequireAuth>} />
+        <Route path="/chat/:userId" element={<RequireAuth><ChatRoom /></RequireAuth>} />
         <Route path="/user/center" element={<RequireAuth><UserCenter /></RequireAuth>} />
         <Route path="/ai/chat" element={<RequireAuth><AIChat /></RequireAuth>} />
         <Route path="*" element={<Navigate to="/login" replace />} />
