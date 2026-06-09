@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # HelpMate — 校园跑腿 / 互助平台
 
 > 业务逻辑完整，贴近校园生活。技术栈：React / Vite + Spring Boot。  
@@ -132,9 +131,7 @@ npm run dev
 
 ```bash
 cd backend
-pip install -r requirements.txt pytest coverage ruff
-coverage run -m pytest tests/
-coverage report
+mvn test
 ```
 
 ### 前端测试
