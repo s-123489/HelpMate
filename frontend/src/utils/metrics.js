@@ -13,7 +13,7 @@
  *   timer.end({ status: 200 });
  */
 
-const STORAGE_KEY = 'helpmate_metrics';
+const _STORAGE_KEY = 'helpmate_metrics';
 
 /**
  * 环形缓冲区，最多保留 N 条最近的指标记录
@@ -97,7 +97,7 @@ const recordApiCall = ({ method, url, durationMs, statusCode, error }) => {
 /**
  * 记录计时
  */
-const recordTiming = (label, durationMs, extra = {}) => {
+const recordTiming = (label, durationMs, _extra = {}) => {
   if (!stats.timings[label]) {
     stats.timings[label] = { count: 0, totalMs: 0, minMs: Infinity, maxMs: -Infinity };
   }

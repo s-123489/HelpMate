@@ -6,6 +6,7 @@ import com.helpmate.common.AuthInterceptor;
 import com.helpmate.dto.CreateTaskRequest;
 import com.helpmate.entity.Task;
 import com.helpmate.service.TaskService;
+import com.helpmate.vo.TaskListVO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -130,12 +131,12 @@ class TaskControllerTest {
 
     @Test
     void listTasks_noParams_returnsDefaultPage() throws Exception {
-        Task t1 = new Task();
-        t1.setId(1L);
-        t1.setTitle("任务1");
-        t1.setStatus(0);
-        Page<Task> page = new Page<>(1, 10);
-        page.setRecords(List.of(t1));
+        TaskListVO v1 = new TaskListVO();
+        v1.setId(1L);
+        v1.setTitle("任务1");
+        v1.setStatus(0);
+        Page<TaskListVO> page = new Page<>(1, 10);
+        page.setRecords(List.of(v1));
         page.setTotal(1);
 
         when(taskService.listTasks(1, 10, null)).thenReturn(page);
@@ -149,12 +150,12 @@ class TaskControllerTest {
 
     @Test
     void listTasks_withCategoryFilter_returnsFiltered() throws Exception {
-        Task t = new Task();
-        t.setId(2L);
-        t.setCategory("FOOD");
-        t.setStatus(0);
-        Page<Task> page = new Page<>(1, 10);
-        page.setRecords(List.of(t));
+        TaskListVO v = new TaskListVO();
+        v.setId(2L);
+        v.setCategory("FOOD");
+        v.setStatus(0);
+        Page<TaskListVO> page = new Page<>(1, 10);
+        page.setRecords(List.of(v));
         page.setTotal(1);
 
         when(taskService.listTasks(1, 10, "FOOD")).thenReturn(page);
@@ -167,7 +168,7 @@ class TaskControllerTest {
 
     @Test
     void listTasks_emptyResult_returnsEmptyRecords() throws Exception {
-        Page<Task> page = new Page<>(1, 10);
+        Page<TaskListVO> page = new Page<>(1, 10);
         page.setRecords(List.of());
         page.setTotal(0);
 

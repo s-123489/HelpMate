@@ -68,7 +68,7 @@ const checkFrontendHealth = () => {
  * 检查后端健康状态
  * @param {string} apiBaseUrl - 后端 API 基地址
  */
-const checkBackendHealth = async (apiBaseUrl = '/api') => {
+const checkBackendHealth = async (_apiBaseUrl = '/api') => {
   const startTime = performance.now();
 
   try {
