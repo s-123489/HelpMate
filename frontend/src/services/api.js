@@ -1,12 +1,18 @@
 // 真实后端 API 服务
+import { createLogger } from '../utils/logger';
+import metrics from '../utils/metrics';
+
+const logger = createLogger('api');
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // 获取 token
 const getToken = () => localStorage.getItem('helpmate_token');
 
-// 通用请求函数
+// 通用请求函数（含结构化日志 + 指标收集）
 const request = async (url, options = {}) => {
   const token = getToken();
+  const method = options.method || 'GET';
+  const startTime = performance.now();
 
   const headers = {
     'Content-Type': 'application/json',
@@ -14,19 +20,68 @@ const request = async (url, options = {}) => {
     ...options.headers,
   };
 
-  const response = await fetch(`${BASE_URL}${url}`, {
-    ...options,
-    headers,
-  });
+  try {
+    const response = await fetch(`${BASE_URL}${url}`, {
+      ...options,
+      headers,
+    });
 
-  const data = await response.json();
+    const durationMs = performance.now() - startTime;
 
-  // 后端统一返回格式：{ code, message, data }
-  if (data.code !== 200) {
-    throw new Error(data.message || '请求失败');
+    const data = await response.json();
+
+    // 记录 API 指标
+    metrics.recordApiCall({
+      method,
+      url,
+      durationMs: Math.round(durationMs),
+      statusCode: response.status,
+    });
+
+    // 结构化日志
+    logger.apiRequest(method, url, durationMs, response.status);
+
+    // 后端统一返回格式：{ code, message, data }
+    if (data.code !== 200) {
+      const err = new Error(data.message || '请求失败');
+      metrics.recordError('api_business_error', {
+        method,
+        url,
+        code: data.code,
+        message: data.message,
+      });
+      throw err;
+    }
+
+    return data;
+  } catch (error) {
+    const durationMs = performance.now() - startTime;
+
+    // 记录失败请求
+    metrics.recordApiCall({
+      method,
+      url,
+      durationMs: Math.round(durationMs),
+      statusCode: 0,
+      error,
+    });
+
+    metrics.recordError('api_network_error', {
+      method,
+      url,
+      message: error.message,
+    });
+
+    logger.error(`API ${method} ${url} failed: ${error.message}`, {
+      type: 'api_error',
+      method,
+      url,
+      duration_ms: Math.round(durationMs),
+      error: error.message,
+    });
+
+    throw error;
   }
-
-  return data;
 };
 
 export const api = {
