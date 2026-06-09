@@ -178,4 +178,74 @@ class TaskServiceTest {
 
         taskService.listTasks(2, 5, null);
     }
+
+    // ===== getMyPublishedTasks =====
+
+    @Test
+    void getMyPublishedTasks_returnsUserTasks() {
+        Task t = new Task(); t.setId(1L); t.setPublisherId(1L); t.setStatus(0);
+        when(taskMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(List.of(t));
+        when(userMapper.selectBatchIds(anyList())).thenReturn(List.of());
+
+        var result = taskService.getMyPublishedTasks(1L);
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void getMyPublishedTasks_emptyResult_returnsEmpty() {
+        when(taskMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(List.of());
+        assertTrue(taskService.getMyPublishedTasks(1L).isEmpty());
+    }
+
+    // ===== getTaskById =====
+
+    @Test
+    void getTaskById_found_returnsTask() {
+        Task t = new Task(); t.setId(1L);
+        when(taskMapper.selectById(1L)).thenReturn(t);
+        assertEquals(1L, taskService.getTaskById(1L).getId());
+    }
+
+    @Test
+    void getTaskById_notFound_throws() {
+        when(taskMapper.selectById(99L)).thenReturn(null);
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> taskService.getTaskById(99L));
+        assertEquals("任务不存在", ex.getMessage());
+    }
+
+    // ===== cancelTask =====
+
+    @Test
+    void cancelTask_success() {
+        Task t = new Task(); t.setId(1L); t.setPublisherId(1L); t.setStatus(0);
+        t.setReward(new BigDecimal("5.00"));
+        when(taskMapper.selectById(1L)).thenReturn(t);
+
+        taskService.cancelTask(1L, 1L);
+
+        verify(taskMapper).updateById(argThat((Task task) -> task.getStatus() == 3));
+        verify(walletService).refundReward(1L, new BigDecimal("5.00"), null);
+    }
+
+    @Test
+    void cancelTask_notFound_throws() {
+        when(taskMapper.selectById(99L)).thenReturn(null);
+        assertThrows(RuntimeException.class, () -> taskService.cancelTask(99L, 1L));
+    }
+
+    @Test
+    void cancelTask_notPublisher_throws() {
+        Task t = new Task(); t.setId(1L); t.setPublisherId(1L); t.setStatus(0);
+        when(taskMapper.selectById(1L)).thenReturn(t);
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> taskService.cancelTask(1L, 2L));
+        assertEquals("只有发布者才能取消任务", ex.getMessage());
+    }
+
+    @Test
+    void cancelTask_notPending_throws() {
+        Task t = new Task(); t.setId(1L); t.setPublisherId(1L); t.setStatus(1);
+        when(taskMapper.selectById(1L)).thenReturn(t);
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> taskService.cancelTask(1L, 1L));
+        assertEquals("只有待接单的任务才能取消", ex.getMessage());
+    }
 }
