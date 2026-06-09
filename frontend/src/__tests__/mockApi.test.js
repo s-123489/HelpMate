@@ -163,4 +163,116 @@ describe('Mock API Tests', () => {
       expect(Array.isArray(result.data)).toBe(true);
     });
   });
+
+  describe('用户信息 API', () => {
+    it('getCurrentUser - 应该返回用户信息', async () => {
+      const loginResult = await mockApi.login('2021001', '123456');
+      const token = loginResult.data.token;
+      const result = await mockApi.getCurrentUser(token);
+      expect(result.success).toBe(true);
+      expect(result.data.studentId).toBe('2021001');
+      expect(result.data.password).toBeUndefined();
+    });
+
+    it('getCurrentUser - token无效应该抛出错误', async () => {
+      await expect(mockApi.getCurrentUser('mock_token_9999')).rejects.toThrow('用户不存在');
+    });
+
+    it('getMyProfile - 应该返回用户资料', async () => {
+      const result = await mockApi.getMyProfile(1);
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveProperty('username');
+      expect(result.data).toHaveProperty('balance');
+      expect(result.data).toHaveProperty('avgScore');
+      expect(result.data).toHaveProperty('reviewCount');
+    });
+
+    it('getMyProfile - 用户不存在应该抛出错误', async () => {
+      await expect(mockApi.getMyProfile(9999)).rejects.toThrow('用户不存在');
+    });
+
+    it('recharge - 应该增加用户余额', async () => {
+      const profileBefore = await mockApi.getMyProfile(1);
+      const balanceBefore = profileBefore.data.balance;
+      const result = await mockApi.recharge(100, 1);
+      expect(result.success).toBe(true);
+      expect(result.data.balance).toBe(balanceBefore + 100);
+    });
+
+    it('recharge - 用户不存在应该抛出错误', async () => {
+      await expect(mockApi.recharge(100, 9999)).rejects.toThrow('用户不存在');
+    });
+  });
+
+  describe('订单 API', () => {
+    it('getUserPublishedTasks - 应该返回用户发布的任务', async () => {
+      const result = await mockApi.getUserPublishedTasks(1);
+      expect(result.success).toBe(true);
+      expect(Array.isArray(result.data)).toBe(true);
+      result.data.forEach(task => expect(task.publisherId).toBe(1));
+    });
+
+    it('getUserAcceptedTasks - 应该返回用户接受的任务', async () => {
+      const result = await mockApi.getUserAcceptedTasks(2);
+      expect(result.success).toBe(true);
+      expect(Array.isArray(result.data)).toBe(true);
+    });
+
+    it('myPublishedOrders - 应该返回我发布的订单', async () => {
+      const result = await mockApi.myPublishedOrders(1);
+      expect(result.success).toBe(true);
+      expect(Array.isArray(result.data)).toBe(true);
+      result.data.forEach(order => {
+        expect(order).toHaveProperty('taskId');
+        expect(order).toHaveProperty('taskTitle');
+        expect(order).toHaveProperty('reward');
+        expect(order).toHaveProperty('status');
+      });
+    });
+
+    it('myAcceptedOrders - 应该返回我接取的订单', async () => {
+      const result = await mockApi.myAcceptedOrders(2);
+      expect(result.success).toBe(true);
+      expect(Array.isArray(result.data)).toBe(true);
+    });
+  });
+
+  describe('任务状态流转', () => {
+    it('cancelTask - 应该取消任务', async () => {
+      const publishResult = await mockApi.publishTask({
+        title: '待取消任务',
+        category: '跑腿',
+        description: '测试取消',
+        reward: 5,
+        pickupLocation: 'A',
+        deliveryLocation: 'B',
+        deadline: '2026-12-31T18:00',
+      }, 1);
+      const taskId = publishResult.data.id;
+      const result = await mockApi.cancelTask(taskId);
+      expect(result.success).toBe(true);
+      expect(result.data.status).toBe('cancelled');
+    });
+
+    it('cancelTask - 任务不存在应该抛出错误', async () => {
+      await expect(mockApi.cancelTask(9999)).rejects.toThrow('任务不存在');
+    });
+
+    it('completeTask - 任务不存在应该抛出错误', async () => {
+      await expect(mockApi.completeTask(9999)).rejects.toThrow('任务不存在');
+    });
+
+    it('completeTask - 未接受的任务不能完成', async () => {
+      const publishResult = await mockApi.publishTask({
+        title: '未接受任务',
+        category: '跑腿',
+        description: '测试',
+        reward: 5,
+        pickupLocation: 'A',
+        deliveryLocation: 'B',
+        deadline: '2026-12-31T18:00',
+      }, 1);
+      await expect(mockApi.completeTask(publishResult.data.id)).rejects.toThrow('任务状态不正确');
+    });
+  });
 });
