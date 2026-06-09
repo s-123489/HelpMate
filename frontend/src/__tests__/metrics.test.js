@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import metrics, { APP_VERSION } from '../utils/metrics';
 
 describe('metrics', () => {
