@@ -71,7 +71,7 @@ class ReviewServiceTest {
 
         assertDoesNotThrow(() -> reviewService.submitReview(1L, 1L, 5, "非常好"));
 
-        verify(reviewMapper).insert(argThat(r ->
+        verify(reviewMapper).insert(argThat((Review r) ->
                 r.getReviewerId().equals(1L) && r.getRevieweeId().equals(2L) && r.getScore() == 5));
         verify(notificationService).push(eq(2L), eq("NEW_REVIEW"), anyString(), anyString(), anyLong());
     }
@@ -85,7 +85,7 @@ class ReviewServiceTest {
 
         assertDoesNotThrow(() -> reviewService.submitReview(1L, 2L, 4, "还行"));
 
-        verify(reviewMapper).insert(argThat(r ->
+        verify(reviewMapper).insert(argThat((Review r) ->
                 r.getReviewerId().equals(2L) && r.getRevieweeId().equals(1L)));
     }
 

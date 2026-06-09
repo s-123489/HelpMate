@@ -67,7 +67,7 @@ class OrderServiceTest {
         Long orderId = orderService.acceptOrder(1L, 2L);
 
         assertEquals(10L, orderId);
-        verify(taskMapper).updateById(argThat(t -> t.getStatus() == 1));
+        verify(taskMapper).updateById(argThat((Task t) -> t.getStatus() == 1));
         verify(notificationService).push(eq(1L), eq("ORDER_ACCEPTED"), anyString(), anyString(), any());
     }
 
@@ -115,8 +115,8 @@ class OrderServiceTest {
 
         orderService.completeOrder(10L, 1L);
 
-        verify(orderInfoMapper).updateById(argThat(o -> o.getStatus() == 1));
-        verify(taskMapper).updateById(argThat(t -> t.getStatus() == 2));
+        verify(orderInfoMapper).updateById(argThat((OrderInfo o) -> o.getStatus() == 1));
+        verify(taskMapper).updateById(argThat((Task t) -> t.getStatus() == 2));
         verify(walletService).releaseReward(1L, 2L, new BigDecimal("5.00"), 10L);
     }
 
@@ -174,8 +174,8 @@ class OrderServiceTest {
 
         orderService.cancelOrder(10L, 1L);
 
-        verify(orderInfoMapper).updateById(argThat(o -> o.getStatus() == 2));
-        verify(taskMapper).updateById(argThat(t -> t.getStatus() == 3));
+        verify(orderInfoMapper).updateById(argThat((OrderInfo o) -> o.getStatus() == 2));
+        verify(taskMapper).updateById(argThat((Task t) -> t.getStatus() == 3));
         verify(walletService).refundReward(1L, new BigDecimal("5.00"), 10L);
     }
 

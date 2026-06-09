@@ -63,8 +63,8 @@ class WalletServiceTest {
 
         walletService.recharge(1L, new BigDecimal("50.00"));
 
-        verify(userMapper).updateById(argThat(u -> u.getBalance().compareTo(new BigDecimal("150.00")) == 0));
-        verify(walletTransactionMapper).insert(argThat(t ->
+        verify(userMapper).updateById(argThat((User u) -> u.getBalance().compareTo(new BigDecimal("150.00")) == 0));
+        verify(walletTransactionMapper).insert(argThat((WalletTransaction t) ->
                 t.getType() == 1 && t.getAmount().compareTo(new BigDecimal("50.00")) == 0));
     }
 
@@ -76,8 +76,8 @@ class WalletServiceTest {
 
         walletService.withdraw(1L, new BigDecimal("50.00"));
 
-        verify(userMapper).updateById(argThat(u -> u.getBalance().compareTo(new BigDecimal("50.00")) == 0));
-        verify(walletTransactionMapper).insert(argThat(t -> t.getType() == 2));
+        verify(userMapper).updateById(argThat((User u) -> u.getBalance().compareTo(new BigDecimal("50.00")) == 0));
+        verify(walletTransactionMapper).insert(argThat((WalletTransaction t) -> t.getType() == 2));
     }
 
     @Test
@@ -102,8 +102,8 @@ class WalletServiceTest {
 
         walletService.freezeReward(1L, new BigDecimal("30.00"), 1L);
 
-        verify(userMapper).updateById(argThat(u -> u.getBalance().compareTo(new BigDecimal("70.00")) == 0));
-        verify(walletTransactionMapper).insert(argThat(t -> t.getType() == 3));
+        verify(userMapper).updateById(argThat((User u) -> u.getBalance().compareTo(new BigDecimal("70.00")) == 0));
+        verify(walletTransactionMapper).insert(argThat((WalletTransaction t) -> t.getType() == 3));
     }
 
     @Test
@@ -129,8 +129,8 @@ class WalletServiceTest {
 
         walletService.releaseReward(1L, 2L, new BigDecimal("50.00"), 10L);
 
-        verify(userMapper).updateById(argThat(u -> u.getBalance().compareTo(new BigDecimal("50.00")) == 0));
-        verify(walletTransactionMapper).insert(argThat(t ->
+        verify(userMapper).updateById(argThat((User u) -> u.getBalance().compareTo(new BigDecimal("50.00")) == 0));
+        verify(walletTransactionMapper).insert(argThat((WalletTransaction t) ->
                 t.getType() == 4 && t.getRelatedOrderId().equals(10L)));
     }
 
@@ -142,8 +142,8 @@ class WalletServiceTest {
 
         walletService.refundReward(1L, new BigDecimal("30.00"), 10L);
 
-        verify(userMapper).updateById(argThat(u -> u.getBalance().compareTo(new BigDecimal("130.00")) == 0));
-        verify(walletTransactionMapper).insert(argThat(t ->
+        verify(userMapper).updateById(argThat((User u) -> u.getBalance().compareTo(new BigDecimal("130.00")) == 0));
+        verify(walletTransactionMapper).insert(argThat((WalletTransaction t) ->
                 t.getType() == 5 && t.getRelatedOrderId().equals(10L)));
     }
 
