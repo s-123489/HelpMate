@@ -109,12 +109,15 @@ class TaskServiceTest {
     void listTasks_noCategory_returnsAllPendingTasks() {
         Task t1 = new Task(); t1.setId(1L); t1.setStatus(0); t1.setPublisherId(1L);
         Task t2 = new Task(); t2.setId(2L); t2.setStatus(0); t2.setPublisherId(2L);
-        Page<Task> taskPage = new Page<>(1, 10);
-        taskPage.setRecords(List.of(t1, t2));
-        taskPage.setTotal(2);
+        List<Task> taskRecords = List.of(t1, t2);
 
         when(taskMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
-                .thenReturn(taskPage);
+                .thenAnswer(inv -> {
+                    Page<Task> p = inv.getArgument(0);
+                    p.setRecords(taskRecords);
+                    p.setTotal(taskRecords.size());
+                    return p;
+                });
         when(userMapper.selectBatchIds(anyList()))
                 .thenReturn(List.of());
 
@@ -127,12 +130,15 @@ class TaskServiceTest {
     @Test
     void listTasks_withCategory_filtersCorrectly() {
         Task t = new Task(); t.setId(3L); t.setCategory("EXPRESS"); t.setPublisherId(3L);
-        Page<Task> taskPage = new Page<>(1, 10);
-        taskPage.setRecords(List.of(t));
-        taskPage.setTotal(1);
+        List<Task> taskRecords = List.of(t);
 
         when(taskMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
-                .thenReturn(taskPage);
+                .thenAnswer(inv -> {
+                    Page<Task> p = inv.getArgument(0);
+                    p.setRecords(taskRecords);
+                    p.setTotal(taskRecords.size());
+                    return p;
+                });
         when(userMapper.selectBatchIds(anyList()))
                 .thenReturn(List.of());
 
@@ -144,12 +150,13 @@ class TaskServiceTest {
 
     @Test
     void listTasks_emptyResult_returnsEmptyPage() {
-        Page<Task> taskPage = new Page<>(1, 10);
-        taskPage.setRecords(List.of());
-        taskPage.setTotal(0);
-
         when(taskMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
-                .thenReturn(taskPage);
+                .thenAnswer(inv -> {
+                    Page<Task> p = inv.getArgument(0);
+                    p.setRecords(List.of());
+                    p.setTotal(0);
+                    return p;
+                });
 
         Page<TaskListVO> result = taskService.listTasks(1, 10, "OTHER");
 
@@ -159,16 +166,14 @@ class TaskServiceTest {
 
     @Test
     void listTasks_pageParamsPassedCorrectly() {
-        Page<Task> taskPage = new Page<>(1, 10);
-        taskPage.setRecords(List.of());
-        taskPage.setTotal(0);
-
         when(taskMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
                 .thenAnswer(inv -> {
                     Page<Task> p = inv.getArgument(0);
                     assertEquals(2L, p.getCurrent());
                     assertEquals(5L, p.getSize());
-                    return taskPage;
+                    p.setRecords(List.of());
+                    p.setTotal(0);
+                    return p;
                 });
 
         taskService.listTasks(2, 5, null);
