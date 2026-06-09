@@ -4,11 +4,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.helpmate.dto.CreateTaskRequest;
 import com.helpmate.entity.Task;
+import com.helpmate.entity.User;
 import com.helpmate.mapper.OrderInfoMapper;
 import com.helpmate.mapper.TaskMapper;
+import com.helpmate.mapper.UserMapper;
 import com.helpmate.service.NotificationService;
 import com.helpmate.service.WalletService;
 import com.helpmate.service.impl.TaskServiceImpl;
+import com.helpmate.vo.TaskListVO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,6 +30,9 @@ class TaskServiceTest {
 
     @Mock
     private TaskMapper taskMapper;
+
+    @Mock
+    private UserMapper userMapper;
 
     @Mock
     private WalletService walletService;
@@ -101,15 +107,21 @@ class TaskServiceTest {
 
     @Test
     void listTasks_noCategory_returnsAllPendingTasks() {
-        Task t1 = new Task(); t1.setId(1L); t1.setStatus(0);
-        Task t2 = new Task(); t2.setId(2L); t2.setStatus(0);
-        Page<Task> mockPage = new Page<>(1, 10);
-        mockPage.setRecords(List.of(t1, t2));
-        mockPage.setTotal(2);
+        Task t1 = new Task(); t1.setId(1L); t1.setStatus(0); t1.setPublisherId(1L);
+        Task t2 = new Task(); t2.setId(2L); t2.setStatus(0); t2.setPublisherId(2L);
+        List<Task> taskRecords = List.of(t1, t2);
 
-        when(taskMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(mockPage);
+        when(taskMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
+                .thenAnswer(inv -> {
+                    Page<Task> p = inv.getArgument(0);
+                    p.setRecords(taskRecords);
+                    p.setTotal(taskRecords.size());
+                    return p;
+                });
+        when(userMapper.selectBatchIds(anyList()))
+                .thenReturn(List.of());
 
-        Page<Task> result = taskService.listTasks(1, 10, null);
+        Page<TaskListVO> result = taskService.listTasks(1, 10, null);
 
         assertEquals(2, result.getRecords().size());
         assertEquals(2, result.getTotal());
@@ -117,14 +129,20 @@ class TaskServiceTest {
 
     @Test
     void listTasks_withCategory_filtersCorrectly() {
-        Task t = new Task(); t.setId(3L); t.setCategory("EXPRESS");
-        Page<Task> mockPage = new Page<>(1, 10);
-        mockPage.setRecords(List.of(t));
-        mockPage.setTotal(1);
+        Task t = new Task(); t.setId(3L); t.setCategory("EXPRESS"); t.setPublisherId(3L);
+        List<Task> taskRecords = List.of(t);
 
-        when(taskMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(mockPage);
+        when(taskMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
+                .thenAnswer(inv -> {
+                    Page<Task> p = inv.getArgument(0);
+                    p.setRecords(taskRecords);
+                    p.setTotal(taskRecords.size());
+                    return p;
+                });
+        when(userMapper.selectBatchIds(anyList()))
+                .thenReturn(List.of());
 
-        Page<Task> result = taskService.listTasks(1, 10, "EXPRESS");
+        Page<TaskListVO> result = taskService.listTasks(1, 10, "EXPRESS");
 
         assertEquals(1, result.getRecords().size());
         assertEquals("EXPRESS", result.getRecords().get(0).getCategory());
@@ -132,13 +150,15 @@ class TaskServiceTest {
 
     @Test
     void listTasks_emptyResult_returnsEmptyPage() {
-        Page<Task> mockPage = new Page<>(1, 10);
-        mockPage.setRecords(List.of());
-        mockPage.setTotal(0);
+        when(taskMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
+                .thenAnswer(inv -> {
+                    Page<Task> p = inv.getArgument(0);
+                    p.setRecords(List.of());
+                    p.setTotal(0);
+                    return p;
+                });
 
-        when(taskMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(mockPage);
-
-        Page<Task> result = taskService.listTasks(1, 10, "OTHER");
+        Page<TaskListVO> result = taskService.listTasks(1, 10, "OTHER");
 
         assertTrue(result.getRecords().isEmpty());
         assertEquals(0, result.getTotal());
@@ -146,15 +166,15 @@ class TaskServiceTest {
 
     @Test
     void listTasks_pageParamsPassedCorrectly() {
-        Page<Task> mockPage = new Page<>(2, 5);
-        mockPage.setTotal(0);
-
-        when(taskMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class))).thenAnswer(inv -> {
-            Page<Task> p = inv.getArgument(0);
-            assertEquals(2L, p.getCurrent());
-            assertEquals(5L, p.getSize());
-            return mockPage;
-        });
+        when(taskMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class)))
+                .thenAnswer(inv -> {
+                    Page<Task> p = inv.getArgument(0);
+                    assertEquals(2L, p.getCurrent());
+                    assertEquals(5L, p.getSize());
+                    p.setRecords(List.of());
+                    p.setTotal(0);
+                    return p;
+                });
 
         taskService.listTasks(2, 5, null);
     }

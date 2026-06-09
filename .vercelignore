@@ -1,0 +1,14 @@
+node_modules
+.git
+backend
+docs
+*.md
+.github
+coverage
+.husky
+*.test.js
+*.test.jsx
+*.spec.js
+*.spec.jsx
+test
+tests

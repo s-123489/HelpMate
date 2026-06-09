@@ -68,35 +68,33 @@ const Home = () => {
     <div className="home-container">
       <header className="home-header">
         <h1 className="app-title">HelpMate</h1>
-        <div className="header-right">
-          {/* AI 客服 — 单气泡 */}
-          <button className="header-icon-btn" onClick={() => navigate('/ai/chat')} title="客服">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <nav className="header-nav">
+          <button className="header-nav-btn" onClick={() => navigate('/ai/chat')}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             </svg>
+            <span>AI客服</span>
           </button>
-
-          {/* 订单进度 — 剪贴板 */}
-          <button className="header-icon-btn" onClick={handleViewOrders} title="订单进度">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <button className="header-nav-btn" onClick={handleViewOrders}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
               <rect x="9" y="3" width="6" height="4" rx="1"/>
               <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
             </svg>
+            <span>订单</span>
           </button>
-
-          {/* 站内聊天 — 双气泡，区别于 AI 客服单气泡 */}
-          <button className="header-icon-btn" onClick={() => navigate('/chat')} title="联系对方">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <button className="header-nav-btn" onClick={() => navigate('/chat')}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17 8h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1l-3 3v-3H9a2 2 0 0 1-2-2v-1"/>
               <path d="M3 6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H8l-3 3V6z"/>
             </svg>
+            <span>聊天</span>
           </button>
-
-          <button className="header-avatar-btn" onClick={handleViewProfile} title="我的">
-            👤
+          <button className="header-nav-btn" onClick={handleViewProfile}>
+            <span className="header-nav-avatar">👤</span>
+            <span>我的</span>
           </button>
-        </div>
+        </nav>
       </header>
 
       <div className="home-content">

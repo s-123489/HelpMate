@@ -2,15 +2,14 @@
 
 ## 1. 项目概述
 
-HelpMate 是一个校园跑腿/互助平台，核心功能包括：发布任务、接单、实时位置、评价系统、钱包支付。
+HelpMate 是一个校园跑腿/互助平台，核心功能包括：发布任务、接单、评价系统、钱包支付。
 
 ## 2. 技术选型
-
 - **框架**：Spring Boot
 - **接口风格**：RESTful
-- **实时通信**：WebSocket
+- **实时通信**：SSE（Server-Sent Events）
 - **数据格式**：JSON
-- **第三方支付**：微信支付 / 支付宝 API
+- **支付方式**：站内钱包（余额充值与扣款）
 
 ## 3. API 基础信息
 
@@ -86,6 +85,35 @@ Authorization: Bearer <token>
 |------|------|------|------|
 | GET | /messages | 获取消息列表 | 是 |
 | PUT | /messages/{id}/read | 标记消息已读 | 是 |
+
+#### 4.5 聊天会话表（`chat_session`）
+
+未读数拆分为 `unread_count_publisher` 和 `unread_count_acceptor` 两个字段，而非存在消息表。查询会话列表时只需读取会话表，无需聚合消息表，减少查询开销。
+
+| 字段名                   | 类型         | 说明         |
+| ------------------------ | ------------ | ------------ |
+| `id`                     | BIGINT, PK   | 会话唯一标识 |
+| `task_id`                | BIGINT       | 关联任务ID   |
+| `publisher_id`           | BIGINT       | 发布者用户ID |
+| `acceptor_id`            | BIGINT       | 接取者用户ID |
+| `last_message`           | VARCHAR(255) | 最新消息摘要 |
+| `last_message_at`        | DATETIME     | 最新消息时间 |
+| `unread_count_publisher` | INT          | 发布者未读数 |
+| `unread_count_acceptor`  | INT          | 接取者未读数 |
+| `created_at`             | DATETIME     | 会话创建时间 |
+
+
+#### 4.6 聊天消息表（`chat_message`）
+
+`session_id` 建有索引，加速按会话查询消息列表。
+
+| 字段名       | 类型       | 说明             |
+| ------------ | ---------- | ---------------- |
+| `id`         | BIGINT, PK | 消息唯一标识     |
+| `session_id` | BIGINT     | 所属会话ID，索引 |
+| `sender_id`  | BIGINT     | 发送者用户ID     |
+| `content`    | TEXT       | 消息内容         |
+| `created_at` | DATETIME   | 发送时间         |
 
 ## 5. 前端 API 调用示例
 
