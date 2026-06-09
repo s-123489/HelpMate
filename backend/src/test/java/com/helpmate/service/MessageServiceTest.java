@@ -67,7 +67,7 @@ class MessageServiceTest {
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> messageService.sendMessage(req, 1L));
         assertEquals("不能给自己发送消息", ex.getMessage());
-        verify(messageMapper, never()).insert(any());
+        verify(messageMapper, never()).insert((Message) any());
     }
 
     @Test

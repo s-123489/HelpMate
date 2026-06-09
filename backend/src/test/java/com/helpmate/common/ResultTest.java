@@ -8,9 +8,9 @@ class ResultTest {
 
     @Test
     void success_withData_returns200() {
-        Result<String> r = Result.success("hello");
+        Result<Integer> r = Result.success(42);
         assertEquals(200, r.getCode());
-        assertEquals("hello", r.getData());
+        assertEquals(42, r.getData());
     }
 
     @Test
