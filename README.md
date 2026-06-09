@@ -1,7 +1,7 @@
 # HelpMate — 校园跑腿 / 互助平台
 
 > 业务逻辑完整，贴近校园生活。技术栈：React / Vite + Spring Boot。  
-> 创新点：实时位置 + 订单状态机 + 钱包支付的组合。
+> 创新点：订单状态机 + 钱包支付的组合。
 
 [![CI](https://github.com/s-123489/HelpMate/actions/workflows/ci.yml/badge.svg)](https://github.com/s-123489/HelpMate/actions)
 [![Backend Coverage](https://codecov.io/gh/s-123489/HelpMate/branch/main/graph/badge.svg?flag=backend)](https://codecov.io/gh/s-123489/HelpMate)
