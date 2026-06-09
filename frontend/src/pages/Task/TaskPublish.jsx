@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './TaskPublish.css';
+import { api } from '../../services/api';
 
 const TaskPublish = () => {
   const navigate = useNavigate();
@@ -14,8 +15,9 @@ const TaskPublish = () => {
     deliveryDetails: '',
     deadline: '',
     reward: '',
-    images: []
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const categories = [
     { id: '跑腿', label: '跑腿', icon: '🏃' },
@@ -28,17 +30,11 @@ const TaskPublish = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleCategoryChange = (category) => {
-    setFormData(prev => ({
-      ...prev,
-      category
-    }));
+    setFormData(prev => ({ ...prev, category }));
   };
 
   const handleQuickReward = (amount) => {
@@ -48,21 +44,39 @@ const TaskPublish = () => {
     }));
   };
 
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    console.log('上传图片', files);
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('发布任务', formData);
-    alert('任务发布成功！');
-    navigate('/');
-  };
+    setLoading(true);
+    setError('');
 
-  const handleSaveDraft = () => {
-    console.log('保存草稿', formData);
-    alert('已保存至草稿箱');
+    try {
+      // 把取件和送达地点合并成 location
+      const location = [
+        formData.pickupLocation,
+        formData.pickupDetails,
+        '→',
+        formData.deliveryLocation,
+        formData.deliveryDetails
+      ].filter(Boolean).join(' ');
+
+      const response = await api.publishTask({
+        title: formData.title,
+        category: formData.category,
+        description: formData.description,
+        reward: parseFloat(formData.reward),
+        location,
+        deadline: formData.deadline,
+      });
+
+      if (response.success) {
+        alert('任务发布成功！');
+        navigate('/');
+      }
+    } catch (err) {
+      setError(err.message || '发布失败，请重试');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -71,10 +85,9 @@ const TaskPublish = () => {
         <button className="back-btn" onClick={() => navigate(-1)}>
           ← 发布任务
         </button>
-        <button className="draft-btn" onClick={handleSaveDraft}>
-          草稿📝
-        </button>
       </header>
+
+      {error && <div className="error-message">{error}</div>}
 
       <form className="publish-form" onSubmit={handleSubmit}>
         <div className="category-section">
@@ -95,7 +108,6 @@ const TaskPublish = () => {
 
         <div className="form-section">
           <label className="section-title">任务详情</label>
-
           <input
             type="text"
             name="title"
@@ -105,7 +117,6 @@ const TaskPublish = () => {
             onChange={handleInputChange}
             required
           />
-
           <div className="textarea-wrapper">
             <textarea
               name="description"
@@ -127,12 +138,11 @@ const TaskPublish = () => {
               type="text"
               name="pickupLocation"
               className="form-input location-input"
-              placeholder="取件地点（点击选择）"
+              placeholder="取件地点"
               value={formData.pickupLocation}
               onChange={handleInputChange}
               required
             />
-            <span className="arrow-icon">›</span>
           </div>
           <input
             type="text"
@@ -151,12 +161,11 @@ const TaskPublish = () => {
               type="text"
               name="deliveryLocation"
               className="form-input location-input"
-              placeholder="送达地点（点击选择）"
+              placeholder="送达地点"
               value={formData.deliveryLocation}
               onChange={handleInputChange}
               required
             />
-            <span className="arrow-icon">›</span>
           </div>
           <input
             type="text"
@@ -176,12 +185,10 @@ const TaskPublish = () => {
               type="datetime-local"
               name="deadline"
               className="form-input deadline-input"
-              placeholder="选择截止时间"
               value={formData.deadline}
               onChange={handleInputChange}
               required
             />
-            <span className="arrow-icon">›</span>
           </div>
         </div>
 
@@ -196,7 +203,7 @@ const TaskPublish = () => {
               placeholder="输入金额"
               value={formData.reward}
               onChange={handleInputChange}
-              min="1"
+              min="0.01"
               step="0.01"
               required
             />
@@ -215,36 +222,8 @@ const TaskPublish = () => {
           </div>
         </div>
 
-        <div className="form-section">
-          <label className="section-title">补充图片（选填）</label>
-          <div className="image-upload-area">
-            <label className="upload-box">
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageUpload}
-                hidden
-              />
-              <div className="upload-icon">📷</div>
-              <div className="upload-text">上传图片</div>
-            </label>
-            <label className="upload-box">
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageUpload}
-                hidden
-              />
-              <div className="upload-icon">➕</div>
-              <div className="upload-text">添加图片</div>
-            </label>
-          </div>
-        </div>
-
-        <button type="submit" className="publish-btn">
-          发布任务
+        <button type="submit" className="publish-btn" disabled={loading}>
+          {loading ? '发布中...' : '发布任务'}
         </button>
       </form>
     </div>

@@ -3,106 +3,118 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: white;
+  padding: 24px;
+  background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 50%, #e0f2fe 100%);
 }
 
 .login-card {
-  background: white;
-  padding: 60px 40px;
+  background: var(--color-surface);
+  padding: 48px 40px;
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   text-align: center;
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-lg);
 }
 
 .login-header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 
 .logo-text {
-  font-size: 36px;
-  font-weight: bold;
-  color: #1E90FF;
-  margin-bottom: 12px;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
 }
 
 .subtitle {
-  color: #666;
-  font-size: 16px;
-  margin-bottom: 40px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  margin-bottom: 0;
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  margin-bottom: 40px;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .form-input {
-  padding: 16px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 16px;
-  transition: all 0.3s;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  transition: border-color 0.2s, box-shadow 0.2s;
   width: 100%;
   box-sizing: border-box;
+  background: var(--color-surface);
 }
 
 .form-input:focus {
-  border-color: #1E90FF;
+  border-color: var(--color-primary);
   outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .submit-btn {
-  background: #1E90FF;
+  background: var(--color-primary);
   color: white;
-  padding: 16px;
+  padding: 14px 24px;
   border: none;
-  border-radius: 30px;
-  font-size: 16px;
+  border-radius: var(--radius-pill);
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
-  width: 200px;
-  margin: 0 auto;
-  box-shadow: 0 4px 12px rgba(30, 144, 255, 0.3);
+  transition: all 0.2s;
+  width: 100%;
+  margin: 8px auto 0;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
 .submit-btn:hover {
-  background: #187bcd;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(30, 144, 255, 0.4);
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
+.submit-btn:disabled {
+  background: var(--color-border-strong);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .register-link {
   text-align: center;
   font-size: 14px;
-  color: #666;
+  color: var(--color-text-secondary);
+  padding-top: 8px;
 }
 
 .link-text {
-  color: #666;
+  color: var(--color-text-secondary);
 }
 
 .register-btn {
   background: none;
   border: none;
-  color: #1E90FF;
+  color: var(--color-primary);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   padding: 0;
-  margin-left: 8px;
+  margin-left: 6px;
 }
 
 .register-btn:hover {
@@ -110,32 +122,35 @@
 }
 
 .error-message {
-  background: #f8d7da;
-  color: #721c24;
-  padding: 12px;
-  border-radius: 4px;
-  margin-bottom: 20px;
+  background: #fef2f2;
+  color: var(--color-danger);
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
   font-size: 14px;
-  text-align: center;
-}
-
-.submit-btn:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+  text-align: left;
+  border: 1px solid #fecaca;
 }
 
 .demo-hint {
   margin-top: 16px;
   padding: 12px;
-  background: #f0f8ff;
-  border-radius: 4px;
+  background: var(--color-primary-soft);
+  border-radius: var(--radius-sm);
   font-size: 12px;
-  color: #666;
+  color: var(--color-text-secondary);
   text-align: left;
 }
 
 .demo-hint p {
   margin: 4px 0;
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 32px 24px;
+  }
+  .logo-text {
+    font-size: 28px;
+  }
 }

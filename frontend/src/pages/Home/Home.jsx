@@ -1,116 +1,120 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Home.css';
+import { api } from '../../services/api';
+
+const timeAgo = (dateStr) => {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return '刚刚';
+  if (mins < 60) return `${mins}分钟前`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}小时前`;
+  return `${Math.floor(hrs / 24)}天前`;
+};
+
+const getInitial = (name) => {
+  if (!name) return '?';
+  return name.charAt(0);
+};
 
 const Home = () => {
   const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
   const [activeCategory, setActiveCategory] = useState('全部');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const categories = ['全部', '跑腿', '代购', '代拿', '代办'];
 
   useEffect(() => {
-    // 模拟获取任务列表
-    setTasks([
-      {
-        id: 1,
-        title: '帮我取快递',
-        category: '跑腿',
-        description: '帮我去菜鸟驿站取一个快递，取件码：1234',
-        reward: 5,
-        pickupLocation: '南门菜鸟驿站',
-        deliveryLocation: '东区宿舍楼 3-201',
-        publishTime: '2026.4.12',
-        publisher: {
-          name: '张三',
-          rating: 4.8
-        }
-      },
-      {
-        id: 2,
-        title: '代买午餐',
-        category: '代购',
-        description: '帮我买一份食堂的午餐，要米饭和红烧肉',
-        reward: 8,
-        pickupLocation: '学生食堂',
-        deliveryLocation: '图书馆3楼',
-        publishTime: '2026.4.12',
-        publisher: {
-          name: '李四',
-          rating: 4.9
-        }
-      },
-      {
-        id: 3,
-        title: '打印文件',
-        category: '代办',
-        description: '帮我打印20页文件，黑白即可',
-        reward: 3,
-        pickupLocation: '教学楼打印店',
-        deliveryLocation: '宿舍4号楼',
-        publishTime: '2026.4.12',
-        publisher: {
-          name: '王五',
-          rating: 4.7
-        }
-      },
-      {
-        id: 4,
-        title: '帮拿 textbooks',
-        category: '代拿',
-        description: '帮我从图书馆拿两本教材',
-        reward: 4,
-        pickupLocation: '图书馆',
-        deliveryLocation: '西区教学楼 201',
-        publishTime: '2026.4.12',
-        publisher: {
-          name: '赵六',
-          rating: 4.6
-        }
+    fetchTasks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCategory]);
+
+  const fetchTasks = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await api.getTasks({ category: activeCategory });
+      if (response.success) {
+        setTasks(response.data);
       }
-    ]);
-  }, []);
-
-  const filteredTasks = activeCategory === '全部'
-    ? tasks
-    : tasks.filter(task => task.category === activeCategory);
-
-  const handleTaskClick = (taskId) => {
-    navigate(`/task/${taskId}`);
+    } catch (err) {
+      setError('获取任务列表失败，请稍后重试');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handlePublishTask = () => {
-    navigate('/task/publish');
-  };
+  const handleTaskClick = (taskId) => navigate(`/task/${taskId}`);
+  const handlePublishTask = () => navigate('/task/publish');
+  const handleViewOrders = () => navigate('/order/message');
+  const handleViewProfile = () => navigate('/user/center');
 
-  const handleViewOrders = () => {
-    navigate('/order/message');
-  };
-
-  const handleViewProfile = () => {
-    navigate('/user/center');
-  };
+  const filteredTasks = tasks.filter((task) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      task.title?.toLowerCase().includes(q) ||
+      task.description?.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div className="home-container">
       <header className="home-header">
-        <div className="header-left">
-          <h1 className="app-title">HelpMate</h1>
-        </div>
+        <h1 className="app-title">HelpMate</h1>
         <div className="header-right">
-          <button className="header-btn" onClick={() => navigate('/ai/chat')}>
-            🤖 客服
+          {/* AI 客服 — 单气泡 */}
+          <button className="header-icon-btn" onClick={() => navigate('/ai/chat')} title="客服">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
           </button>
-          <button className="header-btn" onClick={handleViewOrders}>
-            📋 订单
+
+          {/* 订单进度 — 剪贴板 */}
+          <button className="header-icon-btn" onClick={handleViewOrders} title="订单进度">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+              <rect x="9" y="3" width="6" height="4" rx="1"/>
+              <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+            </svg>
           </button>
-          <button className="header-btn" onClick={handleViewProfile}>
-            👤 我的
+
+          {/* 站内聊天 — 双气泡，区别于 AI 客服单气泡 */}
+          <button className="header-icon-btn" onClick={() => navigate('/chat')} title="联系对方">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 8h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1l-3 3v-3H9a2 2 0 0 1-2-2v-1"/>
+              <path d="M3 6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H8l-3 3V6z"/>
+            </svg>
+          </button>
+
+          <button className="header-avatar-btn" onClick={handleViewProfile} title="我的">
+            👤
           </button>
         </div>
       </header>
 
       <div className="home-content">
+        <div className="search-bar">
+          <span className="search-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </span>
+          <input
+            type="text"
+            className="search-input"
+            placeholder="搜索任务..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+
         <div className="category-filter">
           {categories.map(category => (
             <button
@@ -123,18 +127,16 @@ const Home = () => {
           ))}
         </div>
 
+        {error && <div className="error-message">{error}</div>}
+
         <div className="tasks-grid">
-          {filteredTasks.length === 0 ? (
-            <div className="empty-state">
-              <p>暂无任务</p>
-            </div>
+          {loading ? (
+            <div className="empty-state"><p>加载中...</p></div>
+          ) : filteredTasks.length === 0 ? (
+            <div className="empty-state"><p>暂无任务</p></div>
           ) : (
             filteredTasks.map(task => (
-              <div
-                key={task.id}
-                className="task-card"
-                onClick={() => handleTaskClick(task.id)}
-              >
+              <div key={task.id} className="task-card" onClick={() => handleTaskClick(task.id)}>
                 <div className="task-header">
                   <span className="task-category">{task.category}</span>
                   <span className="task-reward">¥{task.reward}</span>
@@ -144,20 +146,23 @@ const Home = () => {
                 <div className="task-locations">
                   <div className="location-item">
                     <span className="location-icon">📍</span>
-                    <span>{task.pickupLocation}</span>
+                    <span>{task.pickupLocation || task.location || '未知地点'}</span>
                   </div>
                   <span className="location-arrow">→</span>
                   <div className="location-item">
                     <span className="location-icon">🚚</span>
-                    <span>{task.deliveryLocation}</span>
+                    <span>{task.deliveryLocation || ''}</span>
                   </div>
                 </div>
                 <div className="task-footer">
                   <div className="publisher-info">
-                    <span className="publisher-name">{task.publisher.name}</span>
-                    <span className="publisher-rating">⭐ {task.publisher.rating}</span>
+                    <div className="publisher-avatar">{getInitial(task.publisherName)}</div>
+                    <span className="publisher-name">{task.publisherName || '未知用户'}</span>
+                    {task.publisherRating != null && (
+                      <span className="publisher-rating">★{Number(task.publisherRating).toFixed(1)}</span>
+                    )}
                   </div>
-                  <span className="publish-time">{task.publishTime}</span>
+                  <span className="task-time">{timeAgo(task.publishTime)}</span>
                 </div>
               </div>
             ))

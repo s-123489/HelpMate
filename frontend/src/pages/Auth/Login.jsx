@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
-import { mockApi } from '../../services/mockApi';
+import { api } from '../../services/api';
 import { setToken, setUser } from '../../utils/auth';
 
 const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    studentId: '',
+    username: '',
     password: ''
   });
   const [loading, setLoading] = useState(false);
@@ -26,16 +26,17 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
     try {
-      const response = await mockApi.login(formData.studentId, formData.password);
-
+      console.log('登录请求:', { username: formData.username, password: formData.password });
+      const response = await api.login(formData.username, formData.password);
+      console.log('登录响应:', response);
       if (response.success) {
         setToken(response.data.token);
         setUser(response.data.user);
         navigate('/');
       }
     } catch (err) {
+      console.error('登录失败:', err);
       setError(err.message || '登录失败，请重试');
     } finally {
       setLoading(false);
@@ -53,22 +54,19 @@ const Login = () => {
           <h1 className="logo-text">HelpMate</h1>
           <p className="subtitle">校园跑腿 / 互助平台</p>
         </div>
-
         <form className="login-form" onSubmit={handleSubmit}>
           {error && <div className="error-message">{error}</div>}
-
           <div className="form-group">
             <input
               type="text"
-              name="studentId"
+              name="username"
               className="form-input"
-              placeholder="学号："
-              value={formData.studentId}
+              placeholder="用户名："
+              value={formData.username}
               onChange={handleInputChange}
               required
             />
           </div>
-
           <div className="form-group">
             <input
               type="password"
@@ -80,12 +78,10 @@ const Login = () => {
               required
             />
           </div>
-
           <button type="submit" className="submit-btn" disabled={loading}>
             {loading ? '登录中...' : '登入'}
           </button>
         </form>
-
         <div className="register-link">
           <span className="link-text">还没有账号？</span>
           <button className="register-btn" onClick={handleRegister}>

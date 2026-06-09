@@ -3,10 +3,17 @@ import Home from './pages/Home/Home.jsx'
 import TaskDetail from './pages/Task/TaskDetail.jsx'
 import TaskPublish from './pages/Task/TaskPublish.jsx'
 import OrderMessage from './pages/Order/OrderMessage.jsx'
+import ChatList from './pages/Chat/ChatList.jsx'
+import ChatRoom from './pages/Chat/ChatRoom.jsx'
 import UserCenter from './pages/User/UserCenter.jsx'
 import Login from './pages/Auth/Login.jsx'
 import Register from './pages/Auth/Register.jsx'
 import AIChat from './pages/AIChat/AIChat.jsx'
+import { isAuthenticated } from './utils/auth.js'
+
+const RequireAuth = ({ children }) => {
+  return isAuthenticated() ? children : <Navigate to="/login" replace />
+}
 
 function App() {
   return (
@@ -14,13 +21,15 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/" element={<Home />} />
-        <Route path="/task/:id" element={<TaskDetail />} />
-        <Route path="/task/publish" element={<TaskPublish />} />
-        <Route path="/order/message" element={<OrderMessage />} />
-        <Route path="/user/center" element={<UserCenter />} />
-        <Route path="/ai/chat" element={<AIChat />} />
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="/" element={<RequireAuth><Home /></RequireAuth>} />
+        <Route path="/task/:id" element={<RequireAuth><TaskDetail /></RequireAuth>} />
+        <Route path="/task/publish" element={<RequireAuth><TaskPublish /></RequireAuth>} />
+        <Route path="/order/message" element={<RequireAuth><OrderMessage /></RequireAuth>} />
+        <Route path="/chat" element={<RequireAuth><ChatList /></RequireAuth>} />
+        <Route path="/chat/:userId" element={<RequireAuth><ChatRoom /></RequireAuth>} />
+        <Route path="/user/center" element={<RequireAuth><UserCenter /></RequireAuth>} />
+        <Route path="/ai/chat" element={<RequireAuth><AIChat /></RequireAuth>} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   )

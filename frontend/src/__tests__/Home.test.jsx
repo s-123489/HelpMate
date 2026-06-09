@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Home from '../pages/Home/Home';
+import { api } from '../services/api';
 
-// Mock react-router-dom
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -13,9 +13,41 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
+vi.mock('../services/api', () => ({
+  api: {
+    getTasks: vi.fn(),
+  },
+}));
+
+const sampleTasks = [
+  {
+    id: 1,
+    category: '跑腿',
+    title: '帮我取快递',
+    description: '南门菜鸟驿站',
+    reward: 5,
+    pickupLocation: '南门菜鸟驿站',
+    deliveryLocation: '东区一号楼',
+    publisher: { name: '张三', rating: 4.9 },
+    publishTime: '2026-05-19T08:00:00',
+  },
+  {
+    id: 2,
+    category: '代购',
+    title: '代买午餐',
+    description: '麦当劳套餐',
+    reward: 8,
+    pickupLocation: '南门麦当劳',
+    deliveryLocation: '西区三号楼',
+    publisher: { name: '李四', rating: 4.7 },
+    publishTime: '2026-05-19T09:00:00',
+  },
+];
+
 describe('Home Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    api.getTasks.mockResolvedValue({ success: true, data: sampleTasks });
   });
 
   it('应该渲染首页标题和导航按钮', () => {
@@ -58,7 +90,10 @@ describe('Home Component', () => {
     });
   });
 
-  it('点击分类按钮应该筛选任务', async () => {
+  it('点击分类按钮应该用对应分类重新请求任务', async () => {
+    api.getTasks.mockResolvedValueOnce({ success: true, data: sampleTasks });
+    api.getTasks.mockResolvedValueOnce({ success: true, data: [sampleTasks[0]] });
+
     render(
       <BrowserRouter>
         <Home />
@@ -69,11 +104,11 @@ describe('Home Component', () => {
       expect(screen.getByText('帮我取快递')).toBeInTheDocument();
     });
 
-    const categoryButton = screen.getByRole('button', { name: '跑腿' });
-    fireEvent.click(categoryButton);
+    fireEvent.click(screen.getByRole('button', { name: '跑腿' }));
 
-    expect(screen.getByText('帮我取快递')).toBeInTheDocument();
-    expect(screen.queryByText('代买午餐')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(api.getTasks).toHaveBeenLastCalledWith({ category: '跑腿' });
+    });
   });
 
   it('点击任务卡片应该跳转到任务详情页', async () => {

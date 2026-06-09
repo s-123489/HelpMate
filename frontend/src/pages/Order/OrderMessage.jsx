@@ -1,93 +1,99 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api, subscribeNotifications } from '../../services/api';
 import './OrderMessage.css';
+
+const statusMeta = {
+  0: { text: '待接单', className: 'pending' },
+  1: { text: '进行中', className: 'in-progress' },
+  2: { text: '已完成', className: 'completed' },
+  3: { text: '已取消', className: 'cancelled' },
+};
+
+const formatTime = (t) => (t ? String(t).replace('T', ' ').slice(0, 16) : '-');
 
 const OrderMessage = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('orders'); // 'orders' or 'messages'
+  const [activeTab, setActiveTab] = useState('orders');
   const [orders, setOrders] = useState([]);
   const [messages, setMessages] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(3);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(true);
 
-  useEffect(() => {
-    // 模拟获取订单数据
-    setOrders([
-      {
-        id: 1,
-        title: '帮我取快递',
-        status: '进行中',
-        publisher: '李明',
-        accepter: '王五',
-        reward: 5,
-        createTime: '2026.4.12'
-      },
-      {
-        id: 2,
-        title: '代买午餐',
-        status: '待接取',
-        publisher: '李明',
-        accepter: null,
-        reward: 5,
-        createTime: '2026.4.12'
-      },
-      {
-        id: 3,
-        title: '打印文件',
-        status: '已完成',
-        publisher: '李明',
-        accepter: '张三',
-        reward: 5,
-        createTime: '2026.4.12'
-      }
-    ]);
+  const unreadCount = messages.filter((m) => !m.isRead).length;
+
+  const loadOrders = useCallback(async () => {
+    setLoadingOrders(true);
+    try {
+      const [pub, acc] = await Promise.all([
+        api.myPublishedOrders().catch(() => ({ data: [] })),
+        api.myAcceptedOrders().catch(() => ({ data: [] })),
+      ]);
+      // 合并两个列表，标记角色，按创建时间倒序
+      const merged = [
+        ...(pub.data || []).map((o) => ({ ...o, role: 'publisher' })),
+        ...(acc.data || []).map((o) => ({ ...o, role: 'helper' })),
+      ].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+      setOrders(merged);
+    } finally {
+      setLoadingOrders(false);
+    }
+  }, []);
+
+  const loadMessages = useCallback(async () => {
+    setLoadingMessages(true);
+    try {
+      const res = await api.getNotifications();
+      setMessages(res.data);
+    } finally {
+      setLoadingMessages(false);
+    }
   }, []);
 
   useEffect(() => {
-    // 模拟获取消息数据
-    if (activeTab === 'messages') {
-      setMessages([
-        {
-          id: 1,
-          title: '任务已被接取',
-          content: '您发布的任务"帮我取快递"已被王五接取',
-          time: '2026.4.12 14:30',
-          read: false
-        },
-        {
-          id: 2,
-          title: '任务已完成',
-          content: '您发布的任务"打印文件"已完成',
-          time: '2026.4.12 13:20',
-          read: false
-        },
-        {
-          id: 3,
-          title: '系统通知',
-          content: '欢迎使用HelpMate，您的账号已成功注册',
-          time: '2026.4.12 10:00',
-          read: true
-        }
-      ]);
-      setUnreadCount(2);
-    }
-  }, [activeTab]);
+    loadOrders();
+    loadMessages();
+  }, [loadOrders, loadMessages]);
 
-  const getStatusClass = (status) => {
-    const statusMap = {
-      '待接取': 'pending',
-      '进行中': 'in-progress',
-      '已完成': 'completed',
-      '已取消': 'cancelled'
-    };
-    return statusMap[status] || 'pending';
+  // 订阅 SSE，新消息直接 prepend 到列表
+  useEffect(() => {
+    const unsubscribe = subscribeNotifications(
+      (payload) => {
+        // 后端推送结构未严格定义，尽量兼容：可能是完整 Notification，也可能是片段
+        const msg = typeof payload === 'object' && payload !== null ? payload : { content: String(payload) };
+        setMessages((prev) => [
+          {
+            id: msg.id || Date.now(),
+            title: msg.title || '新通知',
+            content: msg.content || '',
+            isRead: 0,
+            createdAt: msg.createdAt || new Date().toISOString(),
+            type: msg.type,
+          },
+          ...prev,
+        ]);
+      },
+      (err) => {
+        console.warn('SSE 连接异常', err);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
+
+  const handleMarkRead = async (id) => {
+    setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, isRead: 1 } : m)));
+    try { await api.markNotificationRead(id); } catch { /* ignore */ }
+  };
+
+  const handleMarkAllRead = async () => {
+    setMessages((prev) => prev.map((m) => ({ ...m, isRead: 1 })));
+    try { await api.markAllNotificationsRead(); } catch { /* ignore */ }
   };
 
   return (
     <div className="order-message-container">
       <header className="order-header">
-        <button className="back-btn" onClick={() => navigate(-1)}>
-          ←
-        </button>
+        <button className="back-btn" onClick={() => navigate(-1)}>←</button>
         <div className="header-tabs">
           <button
             className={`header-tab ${activeTab === 'orders' ? 'active' : ''}`}
@@ -100,73 +106,86 @@ const OrderMessage = () => {
             onClick={() => setActiveTab('messages')}
           >
             消息列表
-            {unreadCount > 0 && (
-              <span className="badge">{unreadCount}</span>
-            )}
+            {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
           </button>
         </div>
       </header>
 
       {activeTab === 'orders' && (
         <div className="orders-content">
-          {orders.length === 0 ? (
-            <div className="empty-state">
-              <p>暂无订单</p>
-            </div>
+          {loadingOrders ? (
+            <div className="empty-state"><p>加载中...</p></div>
+          ) : orders.length === 0 ? (
+            <div className="empty-state"><p>暂无订单</p></div>
           ) : (
-            orders.map(order => (
-              <div key={order.id} className="order-card">
-                <div className="card-header">
-                  <h3 className="order-title">{order.title}</h3>
-                  <span className={`status-badge ${getStatusClass(order.status)}`}>
-                    {order.status}
-                  </span>
+            orders.map((order) => {
+              const meta = statusMeta[order.status] || { text: '未知', className: 'pending' };
+              return (
+                <div
+                  key={`${order.role}-${order.id}`}
+                  className="order-card"
+                  onClick={() => navigate(`/task/${order.taskId}`)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="card-header">
+                    <h3 className="order-title">{order.taskTitle || `任务 #${order.taskId}`}</h3>
+                    <span className={`status-badge ${meta.className}`}>{meta.text}</span>
+                  </div>
+                  <div className="order-details">
+                    <div className="detail-row">
+                      <span className="detail-label">我的角色</span>
+                      <span className="detail-value">
+                        {order.role === 'publisher' ? '发布者' : '接单人'}
+                      </span>
+                    </div>
+                    {order.role === 'publisher' && order.helperName && (
+                      <div className="detail-row">
+                        <span className="detail-label">接单人</span>
+                        <span className="detail-value">{order.helperName}</span>
+                      </div>
+                    )}
+                    <div className="detail-row">
+                      <span className="detail-label">赏金</span>
+                      <span className="detail-value reward">¥{order.reward}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">创建时间</span>
+                      <span className="detail-value">{formatTime(order.createdAt)}</span>
+                    </div>
+                  </div>
                 </div>
-
-                <div className="order-details">
-                  <div className="detail-row">
-                    <span className="detail-label">发布者</span>
-                    <span className="detail-value">{order.publisher}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">接单人</span>
-                    <span className="detail-value">
-                      {order.accepter || '-'}
-                    </span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">赏金</span>
-                    <span className="detail-value reward">¥{order.reward}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span className="detail-label">创建时间</span>
-                    <span className="detail-value">{order.createTime}</span>
-                  </div>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       )}
 
       {activeTab === 'messages' && (
         <div className="messages-content">
-          {messages.length === 0 ? (
-            <div className="empty-state">
-              <p>暂无消息</p>
-            </div>
+          {unreadCount > 0 && (
+            <button className="mark-all-btn" onClick={handleMarkAllRead}>
+              全部已读
+            </button>
+          )}
+          {loadingMessages ? (
+            <div className="empty-state"><p>加载中...</p></div>
+          ) : messages.length === 0 ? (
+            <div className="empty-state"><p>暂无消息</p></div>
           ) : (
-            messages.map(message => (
-              <div key={message.id} className="message-card">
+            messages.map((message) => (
+              <div
+                key={message.id}
+                className={`message-card ${!message.isRead ? 'unread' : ''}`}
+                onClick={() => !message.isRead && handleMarkRead(message.id)}
+                style={{ cursor: !message.isRead ? 'pointer' : 'default' }}
+              >
                 <div className="message-header">
-                  <h4 className="message-title">{message.title}</h4>
-                  {!message.read && (
-                    <span className="unread-dot"></span>
-                  )}
+                  <h4 className="message-title">{message.title || '通知'}</h4>
+                  {!message.isRead && <span className="unread-dot"></span>}
                 </div>
                 <p className="message-content">{message.content}</p>
                 <div className="message-footer">
-                  <span className="message-time">{message.time}</span>
+                  <span className="message-time">{formatTime(message.createdAt)}</span>
                 </div>
               </div>
             ))
