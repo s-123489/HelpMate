@@ -28,7 +28,13 @@ const request = async (url, options = {}) => {
 
     const durationMs = performance.now() - startTime;
 
-    const data = await response.json();
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error(`服务器未响应（HTTP ${response.status}），请确认后端是否正在运行`);
+    }
 
     // 记录 API 指标
     metrics.recordApiCall({
