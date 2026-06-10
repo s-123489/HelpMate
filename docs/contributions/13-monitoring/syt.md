@@ -8,7 +8,7 @@
 
 ### 1. 日志配置
 
-- [ ] 结构化日志格式（本期未引入 JSON appender，沿用默认控制台格式）
+- [ ] 结构化日志格式
 - [x] 日志级别配置
 
 项目通过 SLF4J + Logback 默认配置输出日志，`application.yml` 中开启了 MyBatis Plus SQL 日志：
